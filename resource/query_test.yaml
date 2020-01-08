@@ -1,0 +1,30 @@
+hostUrl: http://localhost:16686
+tests:
+  - name: test 1
+    type: search
+    iteration: 5
+    query:
+        service: generated_span
+        lookback: custom
+        start: 1575138600000000
+        end: 1578464400000000
+        limit: 1
+
+  - name: test 2
+    type: search
+    iteration: 5
+    query:
+        service: generated_span
+        lookback: custom
+        start: 1575138600000000
+        end: 1578464400000000
+        limit: 100
+  
+  - name: test 3
+    type: search
+    iteration: 5
+    query:
+        service: generated_span
+        lookback: 24h
+        start: 1575138600000000
+        limit: 100

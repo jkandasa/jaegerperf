@@ -1,0 +1,8 @@
+target: agent
+serviceName: generated_span
+numberOfDays: 10
+spansPerDay: 10
+childDepth: 1
+tags: 
+  tes: 123
+startTime:
