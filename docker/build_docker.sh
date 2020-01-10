@@ -4,7 +4,7 @@
 DOCKER_ORG='quay.io/jkandasa'
 DOCKER_REPO="${DOCKER_ORG}/jaegerperf"
 
-# alpine golang builder
+# alpine golang builder image tag
 GOLANG_BUILDER_TAG="1.13.5-alpine3.11"
 
 # tag version
@@ -20,14 +20,11 @@ podman run --rm -v \
 # change permission
 chmod +x ./appbin
 
-# build docker image
+# build image
 podman build -t ${DOCKER_REPO}:${TAG} .
 
-# remove bin file
-rm ./appbin -rf
-
-# push new image to docker hub
+# push image to registry
 podman push ${DOCKER_REPO}:${TAG}
 
-# remove build file
-rm ./main -rf
+# remove application bin file
+rm ./appbin -rf
