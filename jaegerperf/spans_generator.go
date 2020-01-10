@@ -3,7 +3,6 @@ package jaegerperf
 import (
 	"fmt"
 	"io"
-	"log"
 	"math/rand"
 	"strings"
 	"time"
@@ -33,7 +32,8 @@ var logs = []otlog.Field{
 
 // GeneratorConfiguration to send spans
 type GeneratorConfiguration struct {
-	Target       string                 `yaml:"Target"`
+	Target       string                 `yaml:"target"`
+	Endpoint     string                 `yaml:"endpoint"`
 	ServiceName  string                 `yaml:"serviceName"`
 	NumberOfDays int                    `yaml:"numberOfDays"`
 	SpansPerDay  int                    `yaml:"spansPerDay"`
@@ -43,13 +43,9 @@ type GeneratorConfiguration struct {
 }
 
 // NewTracer return new jaeger tracer with given configuration
-func NewTracer(cfg jaegercfg.Configuration) opentracing.Tracer {
+func NewTracer(cfg jaegercfg.Configuration) (opentracing.Tracer, error) {
 	tracer, _, err := cfg.NewTracer(jaegercfg.Logger(jaegerlog.StdLogger))
-	if err != nil {
-		log.Printf("Could not initialize jaeger tracer: %s", err.Error())
-		return nil
-	}
-	return tracer
+	return tracer, err
 }
 
 // ExecuteSpansGenerator to dump data
@@ -70,18 +66,24 @@ func ExecuteSpansGenerator(config string) error {
 			tags = append(tags, ot.Tag{Key: k, Value: v})
 		}
 	}
-	execute(cfg)
-	return nil
+	err = execute(cfg)
+	return err
 }
 
-func execute(cfg GeneratorConfiguration) {
+func execute(cfg GeneratorConfiguration) error {
 	r := &jaegercfg.ReporterConfig{
 		LogSpans: false,
 	}
-	if strings.EqualFold("Collector", cfg.Target) {
+	if cfg.Endpoint != "" {
+		r.LocalAgentHostPort = cfg.Endpoint
+	}
+	if strings.EqualFold("collector", cfg.Target) {
 		r = &jaegercfg.ReporterConfig{
 			LogSpans:          false,
-			CollectorEndpoint: "http://localhost:14268",
+			CollectorEndpoint: "http://localhost:14268/api/traces",
+		}
+		if cfg.Endpoint != "" {
+			r.CollectorEndpoint = cfg.Endpoint
 		}
 	}
 
@@ -93,8 +95,15 @@ func execute(cfg GeneratorConfiguration) {
 		Reporter:    r,
 		ServiceName: cfg.ServiceName,
 	}
-	tracer := NewTracer(conf)
-	defer tracer.(io.Closer).Close()
+	tracer, err := NewTracer(conf)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if tracer != nil {
+			tracer.(io.Closer).Close()
+		}
+	}()
 	if cfg.StartTime.IsZero() {
 		cfg.StartTime = time.Now().Add(-1 * time.Hour)
 	}
@@ -128,6 +137,7 @@ func execute(cfg GeneratorConfiguration) {
 		}
 		startTime = startTime.Add(time.Hour * 24)
 	}
+	return nil
 }
 
 func updateTags(s ot.Span, tags []ot.Tag) ot.Span {

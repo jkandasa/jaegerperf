@@ -21,7 +21,11 @@ func generateSpans(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	ExecuteSpansGenerator(string(d))
+	err = ExecuteSpansGenerator(string(d))
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
 }
 
 func executeQueryTest(w http.ResponseWriter, r *http.Request) {

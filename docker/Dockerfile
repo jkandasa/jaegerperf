@@ -1,11 +1,12 @@
-FROM alpine:3.7
+FROM alpine:3.11
 
 ENV APP_HOME /app/
 
-# copy go build file
-COPY ./main $APP_HOME/jaegerperf
-
 EXPOSE 8080
 
+# copy go build file
+COPY ./appbin $APP_HOME/jaegerperf
+
 WORKDIR $APP_HOME
+
 CMD /app/jaegerperf

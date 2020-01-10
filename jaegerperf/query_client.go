@@ -90,8 +90,11 @@ func (c *Client) newRequest(test, method, path string, query map[string]interfac
 
 	start := time.Now()
 	resp, err := c.httpClient.Do(req)
-	m := &Metric{URL: req.URL.String(), Query: query, StatusCode: resp.StatusCode, ContentLength: resp.ContentLength, Elapsed: time.Since(start).Microseconds()}
-	c.timeTrack(test, m)
+	if err != nil {
+		return err
+	}
+	m := Metric{URL: req.URL.String(), Query: query, StatusCode: resp.StatusCode, ContentLength: resp.ContentLength, Elapsed: time.Since(start).Microseconds()}
+	c.timeTrack(test, &m)
 
 	if err != nil {
 		return err
@@ -157,9 +160,15 @@ func ExecuteQueryTest(data string) (map[string]interface{}, error) {
 		for count := 0; count < t.Iteration; count++ {
 			switch t.Type {
 			case "search":
-				c.Search(t.Name, t.Query)
+				_, err := c.Search(t.Name, t.Query)
+				if err != nil {
+					return nil, err
+				}
 			case "services":
-				c.Services(t.Name)
+				_, err := c.Services(t.Name)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}

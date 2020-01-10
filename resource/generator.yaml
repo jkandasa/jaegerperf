@@ -1,4 +1,5 @@
 target: agent
+endpoint:
 serviceName: generated_span
 numberOfDays: 10
 spansPerDay: 10
