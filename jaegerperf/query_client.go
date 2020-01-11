@@ -11,9 +11,11 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"gopkg.in/yaml.v2"
 )
+
+const queryRunner = "QueryRunner"
+
+var qJob = Job{js: JobStatus{}, jobType: queryRunner}
 
 // Client to run jaeger query
 type Client struct {
@@ -29,6 +31,38 @@ type Metric struct {
 	StatusCode    int                    `json:"statusCode"`
 	ContentLength int64                  `json:"contentLength"`
 	Elapsed       int64                  `json:"elapsed"`
+}
+
+// QueryRunnerInput for tests
+type QueryRunnerInput struct {
+	HostURL string      `yaml:"hostUrl"`
+	Tests   []TestInput `yaml:"tests"`
+}
+
+// TestInput data
+type TestInput struct {
+	Name      string                 `yaml:"name"`
+	Type      string                 `yaml:"type"`
+	Iteration int                    `yaml:"iteration"`
+	Query     map[string]interface{} `yaml:"query"`
+}
+
+// MetricSummary data
+type MetricSummary struct {
+	Name    string `json:"name"`
+	Samples int    `json:"samples"`
+	Elapsed int64  `json:"elapsed"`
+}
+
+// JobResult stores job result data
+type JobResult struct {
+	Configuration QueryRunnerInput       `json:"configuration"`
+	Metrics       map[string]interface{} `json:"metrics"`
+}
+
+// IsQueryEngineRuning return bool
+func IsQueryEngineRuning() bool {
+	return qJob.IsRunning()
 }
 
 func (c *Client) timeTrack(name string, metric *Metric) {
@@ -127,36 +161,13 @@ func (c *Client) Search(test string, query map[string]interface{}) (map[string]i
 	return resp, err
 }
 
-// QueryTestInput for tests
-type QueryTestInput struct {
-	HostURL string      `yaml:"hostUrl"`
-	Tests   []TestInput `yaml:"tests"`
-}
-
-// TestInput data
-type TestInput struct {
-	Name      string                 `yaml:"name"`
-	Type      string                 `yaml:"type"`
-	Iteration int                    `yaml:"iteration"`
-	Query     map[string]interface{} `yaml:"query"`
-}
-
-// MetricSummary data
-type MetricSummary struct {
-	Name    string `json:"name"`
-	Samples int    `json:"samples"`
-	Elapsed int64  `json:"elapsed"`
-}
-
 // ExecuteQueryTest runs set of requests
-func ExecuteQueryTest(data string) (map[string]interface{}, error) {
-	d := QueryTestInput{}
-	err := yaml.Unmarshal([]byte(data), &d)
-	if err != nil {
-		return nil, err
-	}
-	c := NewClient(d.HostURL)
-	for _, t := range d.Tests {
+func ExecuteQueryTest(jobID string, input QueryRunnerInput) (map[string]interface{}, error) {
+	jResult := JobResult{Configuration: input}
+	qJob.SetStatus(true, jobID, jResult)
+	defer qJob.SetCompleted()
+	c := NewClient(input.HostURL)
+	for _, t := range input.Tests {
 		for count := 0; count < t.Iteration; count++ {
 			switch t.Type {
 			case "search":
@@ -183,5 +194,7 @@ func ExecuteQueryTest(data string) (map[string]interface{}, error) {
 		}
 		s[k] = MetricSummary{Name: k, Samples: len(m), Elapsed: el / int64(len(m))}
 	}
+	jResult.Metrics = r
+	qJob.SetStatus(true, jobID, jResult)
 	return r, nil
 }

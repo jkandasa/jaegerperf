@@ -13,33 +13,42 @@ import (
 	jaeger "github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	jaegerlog "github.com/uber/jaeger-client-go/log"
-	"gopkg.in/yaml.v2"
 )
 
-var spansPerMinute = 500
+const spansGenerator = "SpansGenerator"
 
-var tags = []ot.Tag{
-	ot.Tag{Key: "created by", Value: "golang qe perf automation"},
-	ot.Tag{Key: "name1", Value: "foo"},
-	ot.Tag{Key: "garbage string", Value: "sjdacdsakjcsadcds"},
-}
+var (
+	spansPerSecond = 500
+	gJob           = Job{js: JobStatus{}, jobType: spansGenerator}
 
-var logs = []otlog.Field{
-	otlog.String("event", "soft error"),
-	otlog.String("type", "cache timeout"),
-	otlog.Int("waited.millis", 1500),
-}
+	tags = []ot.Tag{
+		ot.Tag{Key: "created by", Value: "golang qe perf automation"},
+		ot.Tag{Key: "name1", Value: "foo"},
+		ot.Tag{Key: "garbage string", Value: "sjdacdsakjcsadcds"},
+	}
+
+	logs = []otlog.Field{
+		otlog.String("event", "soft error"),
+		otlog.String("type", "cache timeout"),
+		otlog.Int("waited.millis", 1500),
+	}
+)
 
 // GeneratorConfiguration to send spans
 type GeneratorConfiguration struct {
-	Target       string                 `yaml:"target"`
-	Endpoint     string                 `yaml:"endpoint"`
-	ServiceName  string                 `yaml:"serviceName"`
-	NumberOfDays int                    `yaml:"numberOfDays"`
-	SpansPerDay  int                    `yaml:"spansPerDay"`
-	ChildDepth   int                    `yaml:"childDepth"`
-	Tags         map[string]interface{} `yaml:"tags"`
-	StartTime    time.Time              `yaml:"startTime"`
+	Target       string                 `yaml:"target" json:"target"`
+	Endpoint     string                 `yaml:"endpoint" json:"endpoint"`
+	ServiceName  string                 `yaml:"serviceName" json:"serviceName"`
+	NumberOfDays int                    `yaml:"numberOfDays" json:"numberOfDays"`
+	SpansPerDay  int                    `yaml:"spansPerDay" json:"spansPerDay"`
+	ChildDepth   int                    `yaml:"childDepth" json:"childDepth"`
+	Tags         map[string]interface{} `yaml:"tags" json:"tags"`
+	StartTime    time.Time              `yaml:"startTime" json:"startTime"`
+}
+
+// IsGeneratorRunning job status
+func IsGeneratorRunning() bool {
+	return gJob.IsRunning()
 }
 
 // NewTracer return new jaeger tracer with given configuration
@@ -49,13 +58,10 @@ func NewTracer(cfg jaegercfg.Configuration) (opentracing.Tracer, error) {
 }
 
 // ExecuteSpansGenerator to dump data
-func ExecuteSpansGenerator(config string) error {
-	cfg := GeneratorConfiguration{}
-	err := yaml.Unmarshal([]byte(config), &cfg)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
+func ExecuteSpansGenerator(jobID string, cfg GeneratorConfiguration) error {
+	gJob.SetStatus(true, jobID, cfg)
+	defer gJob.SetCompleted()
+
 	dDay := 24 * time.Hour
 
 	if cfg.NumberOfDays > 0 {
@@ -66,7 +72,12 @@ func ExecuteSpansGenerator(config string) error {
 			tags = append(tags, ot.Tag{Key: k, Value: v})
 		}
 	}
-	err = execute(cfg)
+	// update job configuration
+	gJob.SetStatus(true, jobID, cfg)
+	err := execute(cfg)
+	if err != nil {
+		// store job result
+	}
 	return err
 }
 
@@ -119,7 +130,7 @@ func execute(cfg GeneratorConfiguration) error {
 	startTime := cfg.StartTime
 	for day := 0; day < cfg.NumberOfDays; day++ {
 		totalSpans := cfg.SpansPerDay
-		loopCount := totalSpans / spansPerMinute
+		loopCount := totalSpans / spansPerSecond
 		var spansCount int
 		balanceCount := totalSpans
 		if loopCount > 0 {

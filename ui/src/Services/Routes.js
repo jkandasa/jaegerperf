@@ -1,0 +1,39 @@
+import JobsPage from "../Pages/Jobs/Jobs";
+import SpansGeneratorPage from "../Pages/SpansGenerator/SpansGenerator";
+import QueryRunnerPage from "../Pages/QueryRunner/QueryRunner";
+
+const routes = [
+  {
+    id: "sgPage",
+    title: "Spans Generator",
+    to: "/spansGenerator",
+    component: SpansGeneratorPage
+  },
+  {
+    id: "qrPage",
+    title: "Query Runner",
+    to: "/queryRunner",
+    component: QueryRunnerPage
+  },
+  {
+    id: "jPage",
+    title: "Jobs",
+    to: "/jobs",
+    component: JobsPage
+  }
+];
+
+const hiddenRoutes = [
+  {
+    to: "/",
+    component: ""
+  }
+];
+
+const routeMap = {
+  dashboard: "/",
+  spansGenerator: "/spansGenerator",
+  queryRunner: "queryRunner"
+};
+
+export { routes, hiddenRoutes, routeMap };
