@@ -33,7 +33,7 @@ func (j *JobData) Update() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(fmt.Sprintf("%s/%s_%s.json", fileLocation, j.ID, j.Type), file, 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("%s/%s.json", fileLocation, j.ID), file, 0644)
 	return err
 }
 

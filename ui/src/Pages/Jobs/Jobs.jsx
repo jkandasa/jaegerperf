@@ -1,55 +1,81 @@
 import React from "react";
 import PageTitle from "../../Components/PageTitle/PageTitle";
-import { Table, Divider } from "antd";
+import { Table, Button } from "antd";
+import uuid from "uuid/v4";
+import { jobs } from "../../Services/Api";
+import moment from 'moment'
+
+
 
 const columns = [
   {
-    title: "Name",
-    dataIndex: "name",
-    key: "name"
+    title: "ID",
+    dataIndex: "id",
   },
   {
-    title: "Age",
-    dataIndex: "age",
-    key: "age"
+    title: "Type",
+    dataIndex: "type",
   },
   {
-    title: "Address",
-    dataIndex: "address",
-    key: "address"
+    title: "Status",
+    dataIndex: "data.isRunning",
+    render: v => (v ? "Running" : "Completed"),
+  },
+  {
+    title: "Modified Time",
+    dataIndex: "modifiedTime",
+    render: v => moment(v).format('DD-MMM-YYYY, HH:mm:ss'),
+    defaultSortOrder: "descend",
+    sorter: (a, b) => moment(a.modifiedTime) -moment(b.modifiedTime)
   }
 ];
 
-const data = [
-  {
-    key: "1",
-    name: "John Brown",
-    age: 32,
-    address: "New York No. 1 Lake Park",
-    tags: ["nice", "developer"]
-  },
-  {
-    key: "2",
-    name: "Jim Green",
-    age: 42,
-    address: "London No. 1 Lake Park",
-    tags: ["loser"]
-  },
-  {
-    key: "3",
-    name: "Joe Black",
-    age: 32,
-    address: "Sidney No. 1 Lake Park",
-    tags: ["cool", "teacher"]
-  }
-];
-const jobs = () => {
-  return (
-    <React.Fragment>
-      <PageTitle title={"Jobs"} />
-      <Table columns={columns} dataSource={data} bordered />
-    </React.Fragment>
-  );
-};
+class Jobs extends React.Component {
+  state = {
+    data: []
+  };
 
-export default jobs;
+  fetchData = () => {
+    jobs({})
+      .then(res => {
+        this.setState({ data: res.data });
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  };
+
+  componentDidMount() {
+    this.fetchData();
+  }
+
+  expandRowFn = record => {
+    return <pre style={{ margin: 0 }}>{JSON.stringify(record, null, 2)}</pre>;
+  };
+
+  render() {
+    return (
+      <React.Fragment>
+        <PageTitle title={"Jobs"} />
+        <Button
+          onClick={this.fetchData}
+          type="primary"
+          style={{ marginBottom: "7px" }}
+          size="large"
+        >
+          Refresh
+        </Button>
+
+        <Table
+          columns={columns}
+          dataSource={this.state.data}
+          rowKey={uuid}
+          expandedRowRender={this.expandRowFn}
+          bordered
+        />
+      </React.Fragment>
+    );
+  }
+}
+
+export default Jobs;

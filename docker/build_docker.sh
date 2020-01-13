@@ -20,11 +20,15 @@ podman run --rm -v \
 # change permission
 chmod +x ./appbin
 
+# copy UI files
+cp ../ui/build ./ui -r
+
 # build image
 podman build -t ${DOCKER_REPO}:${TAG} .
 
 # push image to registry
 podman push ${DOCKER_REPO}:${TAG}
 
-# remove application bin file
+# remove application bin file and UI files
 rm ./appbin -rf
+rm ./ui -rf

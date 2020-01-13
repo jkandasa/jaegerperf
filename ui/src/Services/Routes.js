@@ -1,6 +1,7 @@
 import JobsPage from "../Pages/Jobs/Jobs";
 import SpansGeneratorPage from "../Pages/SpansGenerator/SpansGenerator";
 import QueryRunnerPage from "../Pages/QueryRunner/QueryRunner";
+import { t } from 'typy'
 
 const routes = [
   {
@@ -31,9 +32,23 @@ const hiddenRoutes = [
 ];
 
 const routeMap = {
+  home: "/",
   dashboard: "/",
   spansGenerator: "/spansGenerator",
-  queryRunner: "queryRunner"
+  queryRunner: "/queryRunner",
+  jobs: "/jobs"
 };
 
-export { routes, hiddenRoutes, routeMap };
+const redirect = (history, name = 'home', urlParams = {}) => {
+  const to = t(routeMap, name).safeString
+  if (to) {
+    let finalPath = to
+    Object.keys(urlParams).forEach(key => {
+      finalPath = finalPath.replace(':' + key, urlParams[key])
+    })
+    history.push(finalPath)
+  }
+}
+
+
+export { routes, hiddenRoutes, routeMap, redirect };

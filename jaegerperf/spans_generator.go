@@ -18,8 +18,7 @@ import (
 const spansGenerator = "SpansGenerator"
 
 var (
-	spansPerSecond = 500
-	gJob           = Job{js: JobStatus{}, jobType: spansGenerator}
+	gJob = Job{js: JobStatus{}, jobType: spansGenerator}
 
 	tags = []ot.Tag{
 		ot.Tag{Key: "created by", Value: "golang qe perf automation"},
@@ -36,14 +35,15 @@ var (
 
 // GeneratorConfiguration to send spans
 type GeneratorConfiguration struct {
-	Target       string                 `yaml:"target" json:"target"`
-	Endpoint     string                 `yaml:"endpoint" json:"endpoint"`
-	ServiceName  string                 `yaml:"serviceName" json:"serviceName"`
-	NumberOfDays int                    `yaml:"numberOfDays" json:"numberOfDays"`
-	SpansPerDay  int                    `yaml:"spansPerDay" json:"spansPerDay"`
-	ChildDepth   int                    `yaml:"childDepth" json:"childDepth"`
-	Tags         map[string]interface{} `yaml:"tags" json:"tags"`
-	StartTime    time.Time              `yaml:"startTime" json:"startTime"`
+	Target         string                 `yaml:"target" json:"target"`
+	Endpoint       string                 `yaml:"endpoint" json:"endpoint"`
+	ServiceName    string                 `yaml:"serviceName" json:"serviceName"`
+	NumberOfDays   int                    `yaml:"numberOfDays" json:"numberOfDays"`
+	SpansPerDay    int                    `yaml:"spansPerDay" json:"spansPerDay"`
+	SpansPerSecond int                    `yaml:"spansPerSecond" json:"spansPerSecond"`
+	ChildDepth     int                    `yaml:"childDepth" json:"childDepth"`
+	Tags           map[string]interface{} `yaml:"tags" json:"tags"`
+	StartTime      time.Time              `yaml:"startTime" json:"startTime"`
 }
 
 // IsGeneratorRunning job status
@@ -64,8 +64,10 @@ func ExecuteSpansGenerator(jobID string, cfg GeneratorConfiguration) error {
 
 	dDay := 24 * time.Hour
 
-	if cfg.NumberOfDays > 0 {
+	if cfg.NumberOfDays > 1 {
 		cfg.StartTime = time.Now().Add(time.Duration(-1 * dDay.Nanoseconds() * int64(cfg.NumberOfDays)))
+	} else {
+		cfg.StartTime = time.Now().Add(time.Duration(-1 * time.Hour))
 	}
 	if cfg.Tags != nil {
 		for k, v := range cfg.Tags {
@@ -119,6 +121,10 @@ func execute(cfg GeneratorConfiguration) error {
 		cfg.StartTime = time.Now().Add(-1 * time.Hour)
 	}
 
+	if cfg.SpansPerSecond == 0 {
+		cfg.SpansPerSecond = 500
+	}
+
 	if cfg.SpansPerDay == 0 {
 		cfg.SpansPerDay = 10
 	}
@@ -130,7 +136,7 @@ func execute(cfg GeneratorConfiguration) error {
 	startTime := cfg.StartTime
 	for day := 0; day < cfg.NumberOfDays; day++ {
 		totalSpans := cfg.SpansPerDay
-		loopCount := totalSpans / spansPerSecond
+		loopCount := totalSpans / cfg.SpansPerSecond
 		var spansCount int
 		balanceCount := totalSpans
 		if loopCount > 0 {

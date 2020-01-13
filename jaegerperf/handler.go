@@ -10,16 +10,24 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rs/cors"
 	"gopkg.in/yaml.v2"
 )
 
 // StartHandler to provide http api
 func StartHandler() error {
-	http.HandleFunc("/api/executeQueryTest", executeQueryTest)
-	http.HandleFunc("/api/generateSpans", generateSpans)
-	http.HandleFunc("/api/jobs", listJobs)
-	http.HandleFunc("/api/status", status)
-	return http.ListenAndServe(":8080", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/queryRunner", executeQueryTest)
+	mux.HandleFunc("/api/spansGenerator", generateSpans)
+	mux.HandleFunc("/api/jobs", listJobs)
+	mux.HandleFunc("/api/status", status)
+
+	fs := http.FileServer(http.Dir("/app/ui"))
+	mux.Handle("/", fs)
+
+	handler := cors.Default().Handler(mux)
+	fmt.Println("Listening...")
+	return http.ListenAndServe(":8080", handler)
 }
 
 func getPayload(r *http.Request, out interface{}) error {

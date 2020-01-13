@@ -19,7 +19,6 @@ class PageLayout extends React.Component {
     //selectedMenuKey: data.key
     //});
     const { history } = this.props;
-    console.log(data);
     history.push(data.item.props.item.to);
   };
 
