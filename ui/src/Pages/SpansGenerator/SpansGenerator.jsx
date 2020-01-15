@@ -15,8 +15,9 @@ spansPerDay: 10
 spansPerSecond: 500 # maximum push span limit/sec
 childDepth: 2
 tags: 
-  test: 123
-startTime: 2020-01-13T13:00:00Z+5:30
+  spans_generator: "jaegerperf"
+  days: 10
+startTime: 
 `
 
 class SpansGenerator extends React.Component {

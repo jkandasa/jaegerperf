@@ -27,7 +27,7 @@ type Client struct {
 // Metric data
 type Metric struct {
 	URL           string                 `json:"url"`
-	Query         map[string]interface{} `json:"query"`
+	QueryParams   map[string]interface{} `json:"queryParams"`
 	StatusCode    int                    `json:"statusCode"`
 	ContentLength int64                  `json:"contentLength"`
 	Elapsed       int64                  `json:"elapsed"`
@@ -35,16 +35,17 @@ type Metric struct {
 
 // QueryRunnerInput for tests
 type QueryRunnerInput struct {
-	HostURL string      `yaml:"hostUrl"`
-	Tests   []TestInput `yaml:"tests"`
+	HostURL       string      `yaml:"hostUrl" json:"hostUrl"`
+	CurrentTimeAs time.Time   `yaml:"currentTimeAs" json:"currentTimeAs"`
+	Tests         []TestInput `yaml:"tests" json:"tests"`
 }
 
 // TestInput data
 type TestInput struct {
-	Name      string                 `yaml:"name"`
-	Type      string                 `yaml:"type"`
-	Iteration int                    `yaml:"iteration"`
-	Query     map[string]interface{} `yaml:"query"`
+	Name        string                 `yaml:"name" json:"name"`
+	Type        string                 `yaml:"type" json:"type"`
+	Iteration   int                    `yaml:"iteration" json:"iteration"`
+	QueryParams map[string]interface{} `yaml:"queryParams" json:"queryParams"`
 }
 
 // MetricSummary data
@@ -94,7 +95,7 @@ func NewClient(rawURL string) *Client {
 	}
 }
 
-func (c *Client) newRequest(test, method, path string, query map[string]interface{}, body interface{}, response interface{}) error {
+func (c *Client) newRequest(test, method, path string, queryParams map[string]interface{}, body interface{}, response interface{}) error {
 	rel := &url.URL{Path: fmt.Sprintf("/api%s", path)}
 	u := c.BaseURL.ResolveReference(rel)
 	var buf io.ReadWriter
@@ -114,9 +115,9 @@ func (c *Client) newRequest(test, method, path string, query map[string]interfac
 	}
 	req.Header.Set("Accept", "application/json")
 
-	if query != nil {
+	if queryParams != nil {
 		q := req.URL.Query()
-		for k, v := range query {
+		for k, v := range queryParams {
 			q.Add(k, fmt.Sprintf("%v", v))
 		}
 		req.URL.RawQuery = q.Encode()
@@ -127,7 +128,7 @@ func (c *Client) newRequest(test, method, path string, query map[string]interfac
 	if err != nil {
 		return err
 	}
-	m := Metric{URL: req.URL.String(), Query: query, StatusCode: resp.StatusCode, ContentLength: resp.ContentLength, Elapsed: time.Since(start).Microseconds()}
+	m := Metric{URL: req.URL.String(), QueryParams: queryParams, StatusCode: resp.StatusCode, ContentLength: resp.ContentLength, Elapsed: time.Since(start).Microseconds()}
 	c.timeTrack(test, &m)
 
 	if err != nil {
@@ -155,10 +156,24 @@ func (c *Client) Services(test string) (map[string]interface{}, error) {
 }
 
 // Search traces with given filter
-func (c *Client) Search(test string, query map[string]interface{}) (map[string]interface{}, error) {
+func (c *Client) Search(test string, queryParams map[string]interface{}) (map[string]interface{}, error) {
 	resp := make(map[string]interface{})
-	err := c.newRequest(test, "GET", "/traces", query, nil, &resp)
+	err := c.newRequest(test, "GET", "/traces", queryParams, nil, &resp)
 	return resp, err
+}
+
+// update startTime and endTime
+func updateQueryParams(currentTime time.Time, queryParams map[string]interface{}) {
+	for k, v := range queryParams {
+		if k == "start" || k == "end" {
+			d, err := time.ParseDuration(v.(string))
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				queryParams[k] = uint64(currentTime.Add(d).UnixNano() / 1000) // set it in microseconds
+			}
+		}
+	}
 }
 
 // ExecuteQueryTest runs set of requests
@@ -166,12 +181,16 @@ func ExecuteQueryTest(jobID string, input QueryRunnerInput) (map[string]interfac
 	jResult := JobResult{Configuration: input}
 	qJob.SetStatus(true, jobID, jResult)
 	defer qJob.SetCompleted()
+	if input.CurrentTimeAs.IsZero() {
+		input.CurrentTimeAs = time.Now()
+	}
 	c := NewClient(input.HostURL)
 	for _, t := range input.Tests {
+		updateQueryParams(input.CurrentTimeAs, t.QueryParams)
 		for count := 0; count < t.Iteration; count++ {
 			switch t.Type {
 			case "search":
-				_, err := c.Search(t.Name, t.Query)
+				_, err := c.Search(t.Name, t.QueryParams)
 				if err != nil {
 					return nil, err
 				}
@@ -185,15 +204,15 @@ func ExecuteQueryTest(jobID string, input QueryRunnerInput) (map[string]interfac
 	}
 	r := make(map[string]interface{})
 	r["raw"] = c.Metrics
-	s := make(map[string]MetricSummary)
-	r["summary"] = s
+	s := make([]MetricSummary, 0)
 	for k, m := range c.Metrics {
 		var el int64
 		for _, mt := range m {
 			el += mt.Elapsed
 		}
-		s[k] = MetricSummary{Name: k, Samples: len(m), Elapsed: el / int64(len(m))}
+		s = append(s, MetricSummary{Name: k, Samples: len(m), Elapsed: el / int64(len(m))})
 	}
+	r["summary"] = s
 	jResult.Metrics = r
 	qJob.SetStatus(true, jobID, jResult)
 	return r, nil

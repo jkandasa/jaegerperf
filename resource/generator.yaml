@@ -1,9 +1,10 @@
-target: agent
-endpoint:
+target: "collector"
+endpoint: http://jaegerqe-collector:14268/api/traces
 serviceName: generated_span
 numberOfDays: 10
 spansPerDay: 10
-childDepth: 1
+spansPerSecond: 500 # maximum push span limit/sec
+childDepth: 2
 tags: 
-  tes: 123
-startTime:
+  test: 123
+startTime: 2020-01-13T13:00:00Z+5:30

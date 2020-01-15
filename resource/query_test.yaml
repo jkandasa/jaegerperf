@@ -1,30 +1,242 @@
 hostUrl: http://localhost:16686
+currentTimeAs: 
 tests:
-  - name: test 1
+  - name: last 12 hours, limit 1
     type: search
     iteration: 5
-    query:
+    queryParams:
         service: generated_span
         lookback: custom
-        start: 1575138600000000
-        end: 1578464400000000
+        start: -12h
+        end: -0h
         limit: 1
 
-  - name: test 2
+  - name: last 12 hours, limit 100
     type: search
     iteration: 5
-    query:
+    queryParams:
         service: generated_span
         lookback: custom
-        start: 1575138600000000
-        end: 1578464400000000
+        start: -12h
+        end: -0h
         limit: 100
-  
-  - name: test 3
+
+  - name: last 12 hours, limit 500
     type: search
     iteration: 5
-    query:
+    queryParams:
         service: generated_span
-        lookback: 24h
-        start: 1575138600000000
+        lookback: custom
+        start: -12h
+        end: -0h
+        limit: 500
+
+  - name: last 12 hours, limit 1000
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -12h
+        end: -0h
+        limit: 1000
+
+  - name: last 12 hours, limit 1500
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -12h
+        end: -0h
+        limit: 1500
+
+  - name: last 12 hours, limit 2000
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -12h
+        end: -0h
+        limit: 2000
+
+  - name: last 24 hours, limit 1
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -24h
+        end: -0h
+        limit: 1
+
+  - name: last 24 hours, limit 100
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -24h
+        end: -0h
         limit: 100
+
+  - name: last 24 hours, limit 500
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -24h
+        end: -0h
+        limit: 500
+
+  - name: last 24 hours, limit 1000
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -24h
+        end: -0h
+        limit: 1000
+
+  - name: last 24 hours, limit 1500
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -24h
+        end: -0h
+        limit: 1500
+
+  - name: last 24 hours, limit 2000
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -24h
+        end: -0h
+        limit: 2000
+
+  - name: last 2 days, limit 1
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -48h
+        end: -0h
+        limit: 1
+
+  - name: last 2 days, limit 100
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -48h
+        end: -0h
+        limit: 100
+
+  - name: last 2 days, limit 500
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -48h
+        end: -0h
+        limit: 500
+
+  - name: last 2 days, limit 1000
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -48h
+        end: -0h
+        limit: 1000
+
+  - name: last 2 days, limit 1500
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -48h
+        end: -0h
+        limit: 1500
+
+  - name: last 2 days, limit 2000
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -48h
+        end: -0h
+        limit: 2000
+
+  - name: last 7 days, limit 1
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -168h
+        end: -0h
+        limit: 1
+
+  - name: last 7 days, limit 100
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -168h
+        end: -0h
+        limit: 100
+
+  - name: last 7 days, limit 500
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -168h
+        end: -0h
+        limit: 500
+
+  - name: last 7 days, limit 1000
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -168h
+        end: -0h
+        limit: 1000
+
+  - name: last 7 days, limit 1500
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -168h
+        end: -0h
+        limit: 1500
+
+  - name: last 7 days, limit 2000
+    type: search
+    iteration: 5
+    queryParams:
+        service: generated_span
+        lookback: custom
+        start: -168h
+        end: -0h
+        limit: 2000

@@ -62,28 +62,16 @@ func ExecuteSpansGenerator(jobID string, cfg GeneratorConfiguration) error {
 	gJob.SetStatus(true, jobID, cfg)
 	defer gJob.SetCompleted()
 
-	dDay := 24 * time.Hour
-
-	if cfg.NumberOfDays > 1 {
-		cfg.StartTime = time.Now().Add(time.Duration(-1 * dDay.Nanoseconds() * int64(cfg.NumberOfDays)))
-	} else {
-		cfg.StartTime = time.Now().Add(time.Duration(-1 * time.Hour))
-	}
-	if cfg.Tags != nil {
-		for k, v := range cfg.Tags {
-			tags = append(tags, ot.Tag{Key: k, Value: v})
-		}
-	}
 	// update job configuration
 	gJob.SetStatus(true, jobID, cfg)
-	err := execute(cfg)
+	err := execute(&cfg)
 	if err != nil {
 		// store job result
 	}
 	return err
 }
 
-func execute(cfg GeneratorConfiguration) error {
+func execute(cfg *GeneratorConfiguration) error {
 	r := &jaegercfg.ReporterConfig{
 		LogSpans: false,
 	}
@@ -117,8 +105,25 @@ func execute(cfg GeneratorConfiguration) error {
 			tracer.(io.Closer).Close()
 		}
 	}()
+
 	if cfg.StartTime.IsZero() {
-		cfg.StartTime = time.Now().Add(-1 * time.Hour)
+		cfg.StartTime = time.Now().Add(time.Duration(-1 * time.Hour))
+	}
+
+	if cfg.NumberOfDays == 0 {
+		cfg.NumberOfDays = 1
+	}
+
+	dDay := 24 * time.Hour
+
+	if cfg.NumberOfDays > 1 {
+		cfg.StartTime = cfg.StartTime.Add(time.Duration(-1 * dDay.Nanoseconds() * int64(cfg.NumberOfDays)))
+	}
+
+	if cfg.Tags != nil {
+		for k, v := range cfg.Tags {
+			tags = append(tags, ot.Tag{Key: k, Value: v})
+		}
 	}
 
 	if cfg.SpansPerSecond == 0 {
@@ -129,12 +134,8 @@ func execute(cfg GeneratorConfiguration) error {
 		cfg.SpansPerDay = 10
 	}
 
-	if cfg.NumberOfDays == 0 {
-		cfg.NumberOfDays = 1
-	}
-
 	startTime := cfg.StartTime
-	for day := 0; day < cfg.NumberOfDays; day++ {
+	for day := 1; day <= cfg.NumberOfDays; day++ {
 		totalSpans := cfg.SpansPerDay
 		loopCount := totalSpans / cfg.SpansPerSecond
 		var spansCount int
@@ -152,7 +153,7 @@ func execute(cfg GeneratorConfiguration) error {
 		if balanceCount > 0 {
 			sendSpans(startTime, balanceCount, cfg.ChildDepth, tracer)
 		}
-		startTime = startTime.Add(time.Hour * 24)
+		startTime = startTime.Add(dDay)
 	}
 	return nil
 }
