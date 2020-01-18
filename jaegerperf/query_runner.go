@@ -31,6 +31,8 @@ type Metric struct {
 	StatusCode    int                    `json:"statusCode"`
 	ContentLength int64                  `json:"contentLength"`
 	Elapsed       int64                  `json:"elapsed"`
+	ErrorMessage  string                 `json:"errorMessage"`
+	Others        map[string]interface{} `json:"others"`
 }
 
 // QueryRunnerInput for tests
@@ -46,13 +48,17 @@ type TestInput struct {
 	Type        string                 `yaml:"type" json:"type"`
 	Iteration   int                    `yaml:"iteration" json:"iteration"`
 	QueryParams map[string]interface{} `yaml:"queryParams" json:"queryParams"`
+	StatusCode  int                    `yaml:"statusCode" json:"statusCode"`
 }
 
 // MetricSummary data
 type MetricSummary struct {
-	Name    string `json:"name"`
-	Samples int    `json:"samples"`
-	Elapsed int64  `json:"elapsed"`
+	Name            string  `json:"name"`
+	Samples         int     `json:"samples"`
+	Elapsed         int64   `json:"elapsed"`
+	ErrorsCount     int     `json:"errorsCount"`
+	ErrorPercentage float64 `json:"errorPercentage"`
+	ContentLength   int64   `json:"contentLength"`
 }
 
 // JobResult stores job result data
@@ -72,6 +78,15 @@ func (c *Client) timeTrack(name string, metric *Metric) {
 		c.Metrics[name] = make([]*Metric, 0)
 	}
 	c.Metrics[name] = append(v, metric)
+}
+
+func (c *Client) getMetric(name string, index int) *Metric {
+	v, ok := c.Metrics[name]
+	if ok {
+		return v[index]
+
+	}
+	return nil
 }
 
 // NewClient for jaeger query service
@@ -125,15 +140,19 @@ func (c *Client) newRequest(test, method, path string, queryParams map[string]in
 
 	start := time.Now()
 	resp, err := c.httpClient.Do(req)
+	m := Metric{
+		URL:         req.URL.String(),
+		QueryParams: queryParams,
+		Elapsed:     time.Since(start).Microseconds(),
+	}
+	defer c.timeTrack(test, &m)
 	if err != nil {
+		m.ErrorMessage = err.Error()
 		return err
 	}
-	m := Metric{URL: req.URL.String(), QueryParams: queryParams, StatusCode: resp.StatusCode, ContentLength: resp.ContentLength, Elapsed: time.Since(start).Microseconds()}
-	c.timeTrack(test, &m)
+	m.StatusCode = resp.StatusCode
+	m.ContentLength = resp.ContentLength
 
-	if err != nil {
-		return err
-	}
 	defer resp.Body.Close()
 	//err = json.NewDecoder(resp.Body).Decode(v)
 	respBytes, err := ioutil.ReadAll(resp.Body)
@@ -185,14 +204,24 @@ func ExecuteQueryTest(jobID string, input QueryRunnerInput) (map[string]interfac
 		input.CurrentTimeAs = time.Now()
 	}
 	c := NewClient(input.HostURL)
+	tests := make(map[string]TestInput)
 	for _, t := range input.Tests {
+		tests[t.Name] = t
 		updateQueryParams(input.CurrentTimeAs, t.QueryParams)
 		for count := 0; count < t.Iteration; count++ {
 			switch t.Type {
 			case "search":
-				_, err := c.Search(t.Name, t.QueryParams)
-				if err != nil {
-					return nil, err
+				d, err := c.Search(t.Name, t.QueryParams)
+				if err == nil {
+					m := c.getMetric(t.Name, count)
+					if m != nil {
+						od := make(map[string]interface{})
+						od["errors"] = d["errors"]
+						if d["data"] != nil {
+							od["count"] = len(d["data"].([]interface{}))
+						}
+						m.Others = od
+					}
 				}
 			case "services":
 				_, err := c.Services(t.Name)
@@ -206,14 +235,34 @@ func ExecuteQueryTest(jobID string, input QueryRunnerInput) (map[string]interfac
 	r["raw"] = c.Metrics
 	s := make([]MetricSummary, 0)
 	for k, m := range c.Metrics {
+		t := tests[k]
 		var el int64
+		var errors int
+		var cl int64
 		for _, mt := range m {
 			el += mt.Elapsed
+			cl += mt.ContentLength
+			if mt.StatusCode != t.StatusCode || mt.ErrorMessage != "" {
+				errors++
+			}
 		}
-		s = append(s, MetricSummary{Name: k, Samples: len(m), Elapsed: el / int64(len(m))})
+		s = append(s,
+			MetricSummary{
+				Name:            k,
+				Samples:         len(m),
+				Elapsed:         el / int64(len(m)),
+				ErrorsCount:     errors,
+				ErrorPercentage: PercentOf(errors, t.Iteration),
+				ContentLength:   cl / int64(len(m)),
+			})
 	}
 	r["summary"] = s
 	jResult.Metrics = r
 	qJob.SetStatus(true, jobID, jResult)
 	return r, nil
+}
+
+// PercentOf returns percentage
+func PercentOf(part int, total int) float64 {
+	return (float64(part) * float64(100)) / float64(total)
 }

@@ -65,6 +65,11 @@ func ListJobs() ([]JobData, error) {
 	return jobs, nil
 }
 
+// DeleteJob remove from disk
+func DeleteJob(jobID string) error {
+	return os.Remove(fmt.Sprintf("%s/%s.json", fileLocation, jobID))
+}
+
 // JobStatus displays last job status
 type JobStatus struct {
 	IsRunning      bool        `json:"isRunning"`

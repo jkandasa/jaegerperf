@@ -47,37 +47,46 @@ class PageLayout extends React.Component {
     );
   };
 
-  render = () => (
-    <Layout className="layout">
-      <Header>
-        <div className="title">JaegerPerf</div>
-        <Menu
-          theme="dark"
-          mode="horizontal"
-          // defaultSelectedKeys={["2"]}
-          //selectedKeys={this.state.selectedMenuKey}
-          onClick={this.onMenuSelect}
-          selectable={true}
-          style={{ lineHeight: "47px" }}
-        >
-          {routes.map(m => {
-            return (
-              <Menu.Item key={m.id} item={m}>
-                {m.title}
-              </Menu.Item>
-            );
-          })}
-        </Menu>
-      </Header>
-      <Content>
-        <Row>
-          <Col {...contentMargin} />
-          <Col {...contentBody}>{this.renderContent()}</Col>
-          <Col {...contentMargin} />
-        </Row>
-      </Content>
-    </Layout>
-  );
+  render = () => {
+    const { location } = this.props
+    let menuSelection = ""
+    routes.forEach(r => {
+      if (location.pathname.startsWith(r.to)) {
+        menuSelection = r.id
+      }
+    })
+    return (
+      <Layout className="layout">
+        <Header>
+          <div className="title">JaegerPerf</div>
+          <Menu
+            theme="dark"
+            mode="horizontal"
+            // defaultSelectedKeys={["2"]}
+            selectedKeys={menuSelection}
+            onClick={this.onMenuSelect}
+            selectable={false}
+            style={{ lineHeight: "47px" }}
+          >
+            {routes.map(m => {
+              return (
+                <Menu.Item key={m.id} item={m}>
+                  {m.title}
+                </Menu.Item>
+              );
+            })}
+          </Menu>
+        </Header>
+        <Content>
+          <Row>
+            <Col {...contentMargin} />
+            <Col {...contentBody}>{this.renderContent()}</Col>
+            <Col {...contentMargin} />
+          </Row>
+        </Content>
+      </Layout>
+    );
+  };
 }
 
 export default withRouter(PageLayout);

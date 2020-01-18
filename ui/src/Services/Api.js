@@ -53,7 +53,8 @@ myAxios.interceptors.response.use(
 
 const urls = {
   jobs: {
-    default: "/jobs"
+    default: "/jobs",
+    delete: "/jobs/delete"
   },
   queryRunner: {
     default: "/queryRunner"
@@ -104,4 +105,8 @@ export const status = () => {
 
 export const jobs = () => {
   return newRequest(HTTP_VERBS.GET, url("jobs.default"), {}, {});
+};
+
+export const deleteJob = jobId => {
+  return newRequest(HTTP_VERBS.DELETE, url("jobs.delete"), { jobId }, {});
 };

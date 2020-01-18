@@ -20,12 +20,24 @@ func StartHandler() error {
 	mux.HandleFunc("/api/queryRunner", executeQueryTest)
 	mux.HandleFunc("/api/spansGenerator", generateSpans)
 	mux.HandleFunc("/api/jobs", listJobs)
+	mux.HandleFunc("/api/jobs/delete", deleteJob)
 	mux.HandleFunc("/api/status", status)
 
 	fs := http.FileServer(http.Dir("/app/ui"))
 	mux.Handle("/", fs)
 
-	handler := cors.Default().Handler(mux)
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"*"},
+		// Enable Debugging for testing, consider disabling in production
+		Debug: false,
+	})
+
+	// Insert the middleware
+	handler := c.Handler(mux)
+	//handler := cors.Default().Handler(mux)
+
 	fmt.Println("Listening...")
 	return http.ListenAndServe(":8080", handler)
 }
@@ -69,6 +81,18 @@ func listJobs(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("content-type", "application/json")
 	w.Write(output)
+}
+
+func deleteJob(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/text")
+
+	jobID := r.URL.Query().Get("jobId")
+	err := DeleteJob(jobID)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.Write([]byte(fmt.Sprintf("record[%s] deleted successfully", jobID)))
 }
 
 func status(w http.ResponseWriter, r *http.Request) {

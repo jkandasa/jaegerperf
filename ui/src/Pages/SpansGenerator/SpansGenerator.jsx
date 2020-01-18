@@ -1,11 +1,9 @@
 import React from "react";
-import { Row, Col, Input, Select, Button } from "antd";
-import PageTitle from "../../Components/PageTitle/PageTitle";
-import { triggerGenerateSpans } from "../../Services/Api";
+import { message } from "antd";
+import * as API from "../../Services/Api";
 import { redirect as r } from "../../Services/Routes";
+import CodeSubmitForm from "../../Components/CodeSubmitForm/CodeSubmitForm"
 
-const { TextArea } = Input;
-const { Option } = Select;
 
 const defaultCode = `target: "collector"
 endpoint: http://jaegerqe-collector:14268/api/traces
@@ -18,7 +16,7 @@ tags:
   spans_generator: "jaegerperf"
   days: 10
 startTime: 
-`
+`;
 
 class SpansGenerator extends React.Component {
   state = {
@@ -29,47 +27,40 @@ class SpansGenerator extends React.Component {
   onChange = ({ target: { value } }) => {
     this.setState({ codeString: value });
   };
+
   onLanguageChange = value => {
     this.setState({ language: value });
   };
+
   onSubmit = () => {
-    triggerGenerateSpans(this.state.codeString, this.state.language);
-    r(this.props.history, "jobs");
+    API.triggerGenerateSpans(this.state.codeString, this.state.language)
+      .then(res => {
+        this.displayInfo(JSON.stringify(res.data));
+        r(this.props.history, "jobs");
+      })
+      .catch(e => {
+        this.displayError(e.message ? e.message : JSON.stringify(e));
+      });
+  };
+
+  displayError = text => {
+    message.error(text);
+  };
+
+  displayInfo = text => {
+    message.info(text);
   };
 
   render() {
     return (
-      <React.Fragment>
-        <PageTitle title={"Spans Generator"} />
-        <Row gutter={["10", "10"]}>
-          <Col>
-            <span style={{ fontWeight: "600" }}>Language Selection: </span>
-            <Select
-              style={{ width: 200 }}
-              value={this.state.language}
-              onChange={this.onLanguageChange}
-            >
-              <Option value="yaml">YAML</Option>
-              <Option value="json">JSON</Option>
-            </Select>
-          </Col>
-          <Col>
-            <TextArea
-              style={{ minHeight: "50vh" }}
-              value={this.state.codeString}
-              onChange={this.onChange}
-            />
-          </Col>
-          <Col>
-            <Button size="large" type="primary" onClick={this.onSubmit}>
-              Submit
-            </Button>
-            <Button size="large" style={{ marginLeft: "7px" }}>
-              Cancel
-            </Button>
-          </Col>
-        </Row>
-      </React.Fragment>
+      <CodeSubmitForm 
+        title="Spans Generator"
+        language={this.state.language}
+        onLanguageChange={this.onLanguageChange}
+        codeString={this.state.codeString}
+        onCodeChange={this.onChange}
+        onSubmit={this.onSubmit}
+      />
     );
   }
 }
