@@ -14,7 +14,6 @@ import uuid from "uuid/v4";
 import * as API from "../../Services/Api";
 import moment from "moment";
 import { t } from "typy";
-import Highlighter from "../../Components/SyntaxHighlighter/SyntaxHighlighter";
 
 const { confirm } = Modal;
 
@@ -186,7 +185,7 @@ class Jobs extends React.Component {
     return (
       <React.Fragment>
         {queryRunnerTable}
-        <Highlighter code={JSON.stringify(record, null, 2)} language="json" />
+        <pre style={{ margin: 0 }}>{JSON.stringify(record, null, 2)}</pre>
       </React.Fragment>
     );
   };

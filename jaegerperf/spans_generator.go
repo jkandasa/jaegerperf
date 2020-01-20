@@ -107,7 +107,7 @@ func execute(cfg *GeneratorConfiguration) error {
 	}()
 
 	if cfg.StartTime.IsZero() {
-		cfg.StartTime = time.Now().Add(time.Duration(-1 * time.Hour))
+		cfg.StartTime = time.Now().Add(time.Duration(-2 * time.Hour))
 	}
 
 	if cfg.NumberOfDays == 0 {
@@ -116,9 +116,9 @@ func execute(cfg *GeneratorConfiguration) error {
 
 	dDay := 24 * time.Hour
 
-	if cfg.NumberOfDays > 1 {
-		cfg.StartTime = cfg.StartTime.Add(time.Duration(-1 * dDay.Nanoseconds() * int64(cfg.NumberOfDays)))
-	}
+	//if cfg.NumberOfDays > 1 {
+	//	cfg.StartTime = cfg.StartTime.Add(time.Duration(-1 * dDay.Nanoseconds() * int64(cfg.NumberOfDays)))
+	//}
 
 	if cfg.Tags != nil {
 		for k, v := range cfg.Tags {
@@ -145,15 +145,16 @@ func execute(cfg *GeneratorConfiguration) error {
 			balanceCount = totalSpans % loopCount
 		}
 		ticker := time.NewTicker(1 * time.Second)
+		sTime := startTime
 		for count := 0; count < loopCount; count++ {
-			sendSpans(startTime, spansCount, cfg.ChildDepth, tracer)
+			sTime = sendSpans(sTime, spansCount, cfg.ChildDepth, tracer)
 			<-ticker.C
 		}
 		ticker.Stop()
 		if balanceCount > 0 {
-			sendSpans(startTime, balanceCount, cfg.ChildDepth, tracer)
+			sTime = sendSpans(sTime, balanceCount, cfg.ChildDepth, tracer)
 		}
-		startTime = startTime.Add(dDay)
+		startTime = startTime.Add(time.Duration(-1 * dDay.Nanoseconds()))
 	}
 	return nil
 }
@@ -165,9 +166,9 @@ func updateTags(s ot.Span, tags []ot.Tag) ot.Span {
 	return s
 }
 
-func sendSpans(startTime time.Time, spansCount, childDepth int, tracer ot.Tracer) {
+func sendSpans(startTime time.Time, spansCount, childDepth int, tracer ot.Tracer) time.Time {
 	if spansCount == 0 {
-		return
+		return startTime
 	}
 	spansDone := 0
 	for {
@@ -185,7 +186,7 @@ func sendSpans(startTime time.Time, spansCount, childDepth int, tracer ot.Tracer
 		depth := 1
 		sTime := startTime
 		rand.Seed(time.Now().UnixNano())
-		rDuration := time.Duration(1000000 * (rand.Intn(60000) + 500))
+		rDuration := time.Duration(1000000 * (rand.Intn(6000) + 500))
 		var rcDuration time.Duration
 		if childDepth > 0 {
 			rcDuration = time.Duration(rDuration.Nanoseconds() / int64(childDepth))
@@ -210,4 +211,5 @@ func sendSpans(startTime time.Time, spansCount, childDepth int, tracer ot.Tracer
 		parentSpan = parentSpan.SetTag("span type", "parent")
 		parentSpan.FinishWithOptions(ot.FinishOptions{FinishTime: startTime})
 	}
+	return startTime
 }
