@@ -5,13 +5,17 @@ import { redirect as r } from "../../Services/Routes";
 import CodeSubmitForm from "../../Components/CodeSubmitForm/CodeSubmitForm"
 
 
-const defaultCode = `target: "collector"
+const defaultCode = `target: "collector" # options: agent, collector
 endpoint: http://jaegerqe-collector:14268/api/traces
-serviceName: generated_span
+serviceName: jaegerperf_generator
+mode: realtime # options: history, realtime
+# realtime option (executionDuration)
+executionDuration: 5m
+# history options (numberOfDays, spansPerDay)
 numberOfDays: 10
-spansPerDay: 10
-spansPerSecond: 500 # maximum push span limit/sec
-childDepth: 2
+spansPerDay: 5000
+spansPerSecond: 500 # maximum spans limit/sec
+childDepth: 4
 tags: 
   spans_generator: "jaegerperf"
   days: 10

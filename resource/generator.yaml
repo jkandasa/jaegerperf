@@ -1,10 +1,15 @@
-target: "collector"
+target: "collector" # options: agent, collector
 endpoint: http://jaegerqe-collector:14268/api/traces
-serviceName: generated_span
+serviceName: jaegerperf_generator
+mode: realtime # options: history, realtime
+# realtime option (executionDuration)
+executionDuration: 5m
+# history options (numberOfDays, spansPerDay)
 numberOfDays: 10
-spansPerDay: 10
-spansPerSecond: 500 # maximum push span limit/sec
-childDepth: 2
+spansPerDay: 5000
+spansPerSecond: 500 # maximum spans limit/sec
+childDepth: 4
 tags: 
-  test: 123
-startTime: 2020-01-13T13:00:00Z+5:30
+  spans_generator: "jaegerperf"
+  days: 10
+startTime: 

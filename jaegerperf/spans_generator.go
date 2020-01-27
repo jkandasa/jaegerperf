@@ -35,15 +35,17 @@ var (
 
 // GeneratorConfiguration to send spans
 type GeneratorConfiguration struct {
-	Target         string                 `yaml:"target" json:"target"`
-	Endpoint       string                 `yaml:"endpoint" json:"endpoint"`
-	ServiceName    string                 `yaml:"serviceName" json:"serviceName"`
-	NumberOfDays   int                    `yaml:"numberOfDays" json:"numberOfDays"`
-	SpansPerDay    int                    `yaml:"spansPerDay" json:"spansPerDay"`
-	SpansPerSecond int                    `yaml:"spansPerSecond" json:"spansPerSecond"`
-	ChildDepth     int                    `yaml:"childDepth" json:"childDepth"`
-	Tags           map[string]interface{} `yaml:"tags" json:"tags"`
-	StartTime      time.Time              `yaml:"startTime" json:"startTime"`
+	Target            string                 `yaml:"target" json:"target"`
+	Endpoint          string                 `yaml:"endpoint" json:"endpoint"`
+	ServiceName       string                 `yaml:"serviceName" json:"serviceName"`
+	Mode              string                 `yaml:"mode" json:"mode"`
+	ExecutionDuration string                 `yaml:"executionDuration" json:"executionDuration"`
+	NumberOfDays      int                    `yaml:"numberOfDays" json:"numberOfDays"`
+	SpansPerDay       int                    `yaml:"spansPerDay" json:"spansPerDay"`
+	SpansPerSecond    int                    `yaml:"spansPerSecond" json:"spansPerSecond"`
+	ChildDepth        int                    `yaml:"childDepth" json:"childDepth"`
+	Tags              map[string]interface{} `yaml:"tags" json:"tags"`
+	StartTime         time.Time              `yaml:"startTime" json:"startTime"`
 }
 
 // IsGeneratorRunning job status
@@ -88,6 +90,10 @@ func execute(cfg *GeneratorConfiguration) error {
 		}
 	}
 
+	if cfg.ServiceName == "" {
+		cfg.ServiceName = "jaegerPerfTool_generated"
+	}
+
 	conf := jaegercfg.Configuration{
 		Sampler: &jaegercfg.SamplerConfig{
 			Type:  jaeger.SamplerTypeConst,
@@ -106,6 +112,54 @@ func execute(cfg *GeneratorConfiguration) error {
 		}
 	}()
 
+	if cfg.SpansPerSecond == 0 {
+		cfg.SpansPerSecond = 500
+	}
+
+	if cfg.Tags != nil {
+		for k, v := range cfg.Tags {
+			tags = append(tags, ot.Tag{Key: k, Value: v})
+		}
+	}
+
+	if cfg.Mode == "" {
+		cfg.Mode = "realtime"
+	}
+
+	switch strings.ToLower(cfg.Mode) {
+	case "realtime":
+		return generateRealtime(cfg, tracer)
+	case "history":
+		return generateHistory(cfg, tracer)
+	default:
+		return fmt.Errorf("Invalid mode:%s", cfg.Mode)
+	}
+}
+
+func generateRealtime(cfg *GeneratorConfiguration, tracer ot.Tracer) error {
+	if cfg.ExecutionDuration == "" {
+		cfg.ExecutionDuration = "5m"
+	}
+	cfg.StartTime = time.Now()
+	d, err := time.ParseDuration(cfg.ExecutionDuration)
+	if err != nil {
+		return err
+	}
+	endTime := cfg.StartTime.Add(d)
+	ticker := time.NewTicker(1 * time.Second)
+	for {
+		if endTime.Before(time.Now()) {
+			break
+		}
+		sendSpans(time.Now(), cfg.SpansPerSecond, cfg.ChildDepth, tracer)
+		<-ticker.C
+	}
+	ticker.Stop()
+
+	return nil
+}
+
+func generateHistory(cfg *GeneratorConfiguration, tracer ot.Tracer) error {
 	if cfg.StartTime.IsZero() {
 		cfg.StartTime = time.Now().Add(time.Duration(-2 * time.Hour))
 	}
@@ -114,21 +168,17 @@ func execute(cfg *GeneratorConfiguration) error {
 		cfg.NumberOfDays = 1
 	}
 
+	// limit maximum number of days in 2 years
+	// There is no reason to limit the days
+	if cfg.NumberOfDays > 730 {
+		cfg.NumberOfDays = 730
+	}
+
 	dDay := 24 * time.Hour
 
 	//if cfg.NumberOfDays > 1 {
 	//	cfg.StartTime = cfg.StartTime.Add(time.Duration(-1 * dDay.Nanoseconds() * int64(cfg.NumberOfDays)))
 	//}
-
-	if cfg.Tags != nil {
-		for k, v := range cfg.Tags {
-			tags = append(tags, ot.Tag{Key: k, Value: v})
-		}
-	}
-
-	if cfg.SpansPerSecond == 0 {
-		cfg.SpansPerSecond = 500
-	}
 
 	if cfg.SpansPerDay == 0 {
 		cfg.SpansPerDay = 10
@@ -138,16 +188,11 @@ func execute(cfg *GeneratorConfiguration) error {
 	for day := 1; day <= cfg.NumberOfDays; day++ {
 		totalSpans := cfg.SpansPerDay
 		loopCount := totalSpans / cfg.SpansPerSecond
-		var spansCount int
-		balanceCount := totalSpans
-		if loopCount > 0 {
-			spansCount = totalSpans / loopCount
-			balanceCount = totalSpans % loopCount
-		}
+		balanceCount := totalSpans % cfg.SpansPerSecond
 		ticker := time.NewTicker(1 * time.Second)
 		sTime := startTime
 		for count := 0; count < loopCount; count++ {
-			sTime = sendSpans(sTime, spansCount, cfg.ChildDepth, tracer)
+			sTime = sendSpans(sTime, cfg.SpansPerSecond, cfg.ChildDepth, tracer)
 			<-ticker.C
 		}
 		ticker.Stop()
@@ -170,6 +215,8 @@ func sendSpans(startTime time.Time, spansCount, childDepth int, tracer ot.Tracer
 	if spansCount == 0 {
 		return startTime
 	}
+	parentSpansCount := spansCount / (childDepth + 1)
+	randMaxDuration := 950000 / parentSpansCount // 0.95 second(= 950000 microseconds) / parentSpansCount
 	spansDone := 0
 	for {
 		if spansDone >= spansCount {
@@ -186,7 +233,7 @@ func sendSpans(startTime time.Time, spansCount, childDepth int, tracer ot.Tracer
 		depth := 1
 		sTime := startTime
 		rand.Seed(time.Now().UnixNano())
-		rDuration := time.Duration(1000000 * (rand.Intn(6000) + 500))
+		rDuration := time.Duration(1000 * (rand.Intn(randMaxDuration)))
 		var rcDuration time.Duration
 		if childDepth > 0 {
 			rcDuration = time.Duration(rDuration.Nanoseconds() / int64(childDepth))
@@ -200,7 +247,7 @@ func sendSpans(startTime time.Time, spansCount, childDepth int, tracer ot.Tracer
 			updateTags(childSpan, tags)
 			childSpan = childSpan.SetTag("span type", fmt.Sprintf("child:%d", depth))
 			childSpan.FinishWithOptions(ot.FinishOptions{FinishTime: startTime.Add(rDuration)})
-			time.Sleep(2 * time.Millisecond)
+			time.Sleep(2 * time.Nanosecond)
 			depth++
 		}
 

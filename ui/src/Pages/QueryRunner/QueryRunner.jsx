@@ -6,57 +6,137 @@ import CodeSubmitForm from "../../Components/CodeSubmitForm/CodeSubmitForm"
 
 const defaultCode = `hostUrl: http://jaegerqe-query:16686
 tests:
-  - name: with_limit_1
+  - name: 1.last 12 hours limit 100
     type: search
-    iteration: 5
-    query:
-      service: generated_span
-      lookback: 7d
-      limit: 1
-
-  - name: with_limit_100
-    type: search
-    iteration: 5
-    query:
-      service: generated_span
-      lookback: 7d
+    iteration: 10
+    statusCode: 200
+    queryParams:
+      service: jaegerperf_generator
       limit: 100
-  
-  - name: with_limit_500
-    type: search
-    iteration: 5
-    query:
-      service: generated_span
-      lookback: 7d
-      limit: 500
+      lookback: custom
+      start: -12h
+      end: 0h
 
-  - name: with_limit_1000
+  - name: 1.last 12 hours limit 1000
     type: search
-    iteration: 5
-    query:
-      service: generated_span
-      lookback: 7d
+    iteration: 10
+    statusCode: 200
+    queryParams:
+      service: jaegerperf_generator
       limit: 1000
+      lookback: custom
+      start: -12h
+      end: 0h
 
-  - name: with_limit_1500
+  - name: 1.last 12 hours limit 2000
     type: search
-    iteration: 5
-    query:
-      service: generated_span
-      lookback: 7d
-      limit: 1500
-
-  - name: with_limit_2000
-    type: search
-    iteration: 5
-    query:
-      service: generated_span
-      lookback: 7d
+    iteration: 10
+    statusCode: 200
+    queryParams:
+      service: jaegerperf_generator
       limit: 2000
+      lookback: custom
+      start: -12h
+      end: 0h
 
-  - name: services
-    type: services
-    iteration: 5
+  - name: 2.last 24 hours limit 100
+    type: search
+    iteration: 10
+    statusCode: 200
+    queryParams:
+      service: jaegerperf_generator
+      limit: 100
+      lookback: custom
+      start: -24h
+      end: 0h
+
+  - name: 2.last 24 hours limit 1000
+    type: search
+    iteration: 10
+    statusCode: 200
+    queryParams:
+      service: jaegerperf_generator
+      limit: 1000
+      lookback: custom
+      start: -24h
+      end: 0h
+
+  - name: 2.last 24 hours limit 2000
+    type: search
+    iteration: 10
+    statusCode: 200
+    queryParams:
+      service: jaegerperf_generator
+      limit: 2000
+      lookback: custom
+      start: -24h
+      end: 0h
+
+  - name: 3.last 2 days limit 100
+    type: search
+    iteration: 10
+    statusCode: 200
+    queryParams:
+      service: jaegerperf_generator
+      limit: 100
+      lookback: custom
+      start: -48h
+      end: 0h
+
+  - name: 3.last 2 days limit 1000
+    type: search
+    iteration: 10
+    statusCode: 200
+    queryParams:
+      service: jaegerperf_generator
+      limit: 1000
+      lookback: custom
+      start: -48h
+      end: 0h
+
+  - name: 3.last 2 days limit 2000
+    type: search
+    iteration: 10
+    statusCode: 200
+    queryParams:
+      service: jaegerperf_generator
+      limit: 2000
+      lookback: custom
+      start: -48h
+      end: 0h
+
+  - name: 4.last 7 days limit 100
+    type: search
+    iteration: 10
+    statusCode: 200
+    queryParams:
+      service: jaegerperf_generator
+      limit: 100
+      lookback: custom
+      start: -168h
+      end: 0h
+
+  - name: 4.last 7 days limit 1000
+    type: search
+    iteration: 10
+    statusCode: 200
+    queryParams:
+      service: jaegerperf_generator
+      limit: 1000
+      lookback: custom
+      start: -168h
+      end: 0h
+
+  - name: 4.last 7 days limit 2000
+    type: search
+    iteration: 10
+    statusCode: 200
+    queryParams:
+      service: jaegerperf_generator
+      limit: 2000
+      lookback: custom
+      start: -168h
+      end: 0h
 `;
 
 class QueryRunner extends React.Component {

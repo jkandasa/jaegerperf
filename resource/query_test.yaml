@@ -1,242 +1,133 @@
-hostUrl: http://localhost:16686
-currentTimeAs: 
+hostUrl: http://jaegerqe-query:16686
 tests:
-  - name: last 12 hours, limit 1
+  - name: 1.last 12 hours limit 100
     type: search
-    iteration: 5
+    iteration: 10
+    statusCode: 200
     queryParams:
-        service: generated_span
-        lookback: custom
-        start: -12h
-        end: -0h
-        limit: 1
+      service: jaegerperf_generator
+      limit: 100
+      lookback: custom
+      start: -12h
+      end: 0h
 
-  - name: last 12 hours, limit 100
+  - name: 1.last 12 hours limit 1000
     type: search
-    iteration: 5
+    iteration: 10
+    statusCode: 200
     queryParams:
-        service: generated_span
-        lookback: custom
-        start: -12h
-        end: -0h
-        limit: 100
+      service: jaegerperf_generator
+      limit: 1000
+      lookback: custom
+      start: -12h
+      end: 0h
 
-  - name: last 12 hours, limit 500
+  - name: 1.last 12 hours limit 2000
     type: search
-    iteration: 5
+    iteration: 10
+    statusCode: 200
     queryParams:
-        service: generated_span
-        lookback: custom
-        start: -12h
-        end: -0h
-        limit: 500
+      service: jaegerperf_generator
+      limit: 2000
+      lookback: custom
+      start: -12h
+      end: 0h
 
-  - name: last 12 hours, limit 1000
+  - name: 2.last 24 hours limit 100
     type: search
-    iteration: 5
+    iteration: 10
+    statusCode: 200
     queryParams:
-        service: generated_span
-        lookback: custom
-        start: -12h
-        end: -0h
-        limit: 1000
+      service: jaegerperf_generator
+      limit: 100
+      lookback: custom
+      start: -24h
+      end: 0h
 
-  - name: last 12 hours, limit 1500
+  - name: 2.last 24 hours limit 1000
     type: search
-    iteration: 5
+    iteration: 10
+    statusCode: 200
     queryParams:
-        service: generated_span
-        lookback: custom
-        start: -12h
-        end: -0h
-        limit: 1500
+      service: jaegerperf_generator
+      limit: 1000
+      lookback: custom
+      start: -24h
+      end: 0h
 
-  - name: last 12 hours, limit 2000
+  - name: 2.last 24 hours limit 2000
     type: search
-    iteration: 5
+    iteration: 10
+    statusCode: 200
     queryParams:
-        service: generated_span
-        lookback: custom
-        start: -12h
-        end: -0h
-        limit: 2000
+      service: jaegerperf_generator
+      limit: 2000
+      lookback: custom
+      start: -24h
+      end: 0h
 
-  - name: last 24 hours, limit 1
+  - name: 3.last 2 days limit 100
     type: search
-    iteration: 5
+    iteration: 10
+    statusCode: 200
     queryParams:
-        service: generated_span
-        lookback: custom
-        start: -24h
-        end: -0h
-        limit: 1
+      service: jaegerperf_generator
+      limit: 100
+      lookback: custom
+      start: -48h
+      end: 0h
 
-  - name: last 24 hours, limit 100
+  - name: 3.last 2 days limit 1000
     type: search
-    iteration: 5
+    iteration: 10
+    statusCode: 200
     queryParams:
-        service: generated_span
-        lookback: custom
-        start: -24h
-        end: -0h
-        limit: 100
+      service: jaegerperf_generator
+      limit: 1000
+      lookback: custom
+      start: -48h
+      end: 0h
 
-  - name: last 24 hours, limit 500
+  - name: 3.last 2 days limit 2000
     type: search
-    iteration: 5
+    iteration: 10
+    statusCode: 200
     queryParams:
-        service: generated_span
-        lookback: custom
-        start: -24h
-        end: -0h
-        limit: 500
+      service: jaegerperf_generator
+      limit: 2000
+      lookback: custom
+      start: -48h
+      end: 0h
 
-  - name: last 24 hours, limit 1000
+  - name: 4.last 7 days limit 100
     type: search
-    iteration: 5
+    iteration: 10
+    statusCode: 200
     queryParams:
-        service: generated_span
-        lookback: custom
-        start: -24h
-        end: -0h
-        limit: 1000
+      service: jaegerperf_generator
+      limit: 100
+      lookback: custom
+      start: -168h
+      end: 0h
 
-  - name: last 24 hours, limit 1500
+  - name: 4.last 7 days limit 1000
     type: search
-    iteration: 5
+    iteration: 10
+    statusCode: 200
     queryParams:
-        service: generated_span
-        lookback: custom
-        start: -24h
-        end: -0h
-        limit: 1500
+      service: jaegerperf_generator
+      limit: 1000
+      lookback: custom
+      start: -168h
+      end: 0h
 
-  - name: last 24 hours, limit 2000
+  - name: 4.last 7 days limit 2000
     type: search
-    iteration: 5
+    iteration: 10
+    statusCode: 200
     queryParams:
-        service: generated_span
-        lookback: custom
-        start: -24h
-        end: -0h
-        limit: 2000
-
-  - name: last 2 days, limit 1
-    type: search
-    iteration: 5
-    queryParams:
-        service: generated_span
-        lookback: custom
-        start: -48h
-        end: -0h
-        limit: 1
-
-  - name: last 2 days, limit 100
-    type: search
-    iteration: 5
-    queryParams:
-        service: generated_span
-        lookback: custom
-        start: -48h
-        end: -0h
-        limit: 100
-
-  - name: last 2 days, limit 500
-    type: search
-    iteration: 5
-    queryParams:
-        service: generated_span
-        lookback: custom
-        start: -48h
-        end: -0h
-        limit: 500
-
-  - name: last 2 days, limit 1000
-    type: search
-    iteration: 5
-    queryParams:
-        service: generated_span
-        lookback: custom
-        start: -48h
-        end: -0h
-        limit: 1000
-
-  - name: last 2 days, limit 1500
-    type: search
-    iteration: 5
-    queryParams:
-        service: generated_span
-        lookback: custom
-        start: -48h
-        end: -0h
-        limit: 1500
-
-  - name: last 2 days, limit 2000
-    type: search
-    iteration: 5
-    queryParams:
-        service: generated_span
-        lookback: custom
-        start: -48h
-        end: -0h
-        limit: 2000
-
-  - name: last 7 days, limit 1
-    type: search
-    iteration: 5
-    queryParams:
-        service: generated_span
-        lookback: custom
-        start: -168h
-        end: -0h
-        limit: 1
-
-  - name: last 7 days, limit 100
-    type: search
-    iteration: 5
-    queryParams:
-        service: generated_span
-        lookback: custom
-        start: -168h
-        end: -0h
-        limit: 100
-
-  - name: last 7 days, limit 500
-    type: search
-    iteration: 5
-    queryParams:
-        service: generated_span
-        lookback: custom
-        start: -168h
-        end: -0h
-        limit: 500
-
-  - name: last 7 days, limit 1000
-    type: search
-    iteration: 5
-    queryParams:
-        service: generated_span
-        lookback: custom
-        start: -168h
-        end: -0h
-        limit: 1000
-
-  - name: last 7 days, limit 1500
-    type: search
-    iteration: 5
-    queryParams:
-        service: generated_span
-        lookback: custom
-        start: -168h
-        end: -0h
-        limit: 1500
-
-  - name: last 7 days, limit 2000
-    type: search
-    iteration: 5
-    queryParams:
-        service: generated_span
-        lookback: custom
-        start: -168h
-        end: -0h
-        limit: 2000
+      service: jaegerperf_generator
+      limit: 2000
+      lookback: custom
+      start: -168h
+      end: 0h
