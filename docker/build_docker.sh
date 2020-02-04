@@ -21,7 +21,7 @@ podman run --rm -v \
 chmod +x ./appbin
 
 # copy UI files
-cp ../ui/build ./ui -r
+cp ../web/build ./web -r
 
 # build image
 podman build -t ${DOCKER_REPO}:${TAG} .
@@ -31,4 +31,4 @@ podman push ${DOCKER_REPO}:${TAG}
 
 # remove application bin file and UI files
 rm ./appbin -rf
-rm ./ui -rf
+rm ./web -rf

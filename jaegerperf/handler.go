@@ -23,7 +23,7 @@ func StartHandler() error {
 	mux.HandleFunc("/api/jobs/delete", deleteJob)
 	mux.HandleFunc("/api/status", status)
 
-	fs := http.FileServer(http.Dir("/app/ui"))
+	fs := http.FileServer(http.Dir("/app/web"))
 	mux.Handle("/", fs)
 
 	c := cors.New(cors.Options{

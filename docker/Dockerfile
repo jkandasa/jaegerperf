@@ -6,8 +6,8 @@ ENV APP_HOME /app/
 
 EXPOSE 8080
 
-# copy UI files
-COPY ./ui $APP_HOME/ui
+# copy WEB files
+COPY ./web $APP_HOME/web
 
 # copy application bin file
 COPY ./appbin $APP_HOME/jaegerperf
