@@ -16,7 +16,7 @@ to generate spans configuration can be supplied via YAML or JSON format.
 
 #### API: POST http://localhost:8080/api/spansGenerator
 Headers: "Content-Type": "application/yaml" or "application/json"
-Returns `jobId`.
+Returns `jobID`.
 
 You can execute via WEB UI as well. 
 #### WEB UI: http://localhost:8080 >> Spans Generator
@@ -61,7 +61,7 @@ to execute query runner configuration can be supplied via YAML or JSON format.
 
 #### API: POST http://localhost:8080/api/queryRunner
 Headers: "Content-Type": "application/yaml" or "application/json"
-Returns `jobId`.
+Returns `jobID`.
 
 You can execute via WEB UI as well. 
 #### WEB UI: http://localhost:8080 >> Query Runner
@@ -110,7 +110,7 @@ tests:
         * `-168h` -> current time - 168 hours (ie: current time - 7 days)
 
 ### Jobs
-Once triggered `Query Runner` or `Spans Generator` you can see the status of the the job. You can get exact `jobId` when you trigger the API.
+Once triggered `Query Runner` or `Spans Generator` you can see the status of the the job. You can get exact `jobID` when you trigger the API.
 
 #### API: POST http://localhost:8080/api/jobs
 
