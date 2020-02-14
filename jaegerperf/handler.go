@@ -18,10 +18,12 @@ import (
 func StartHandler() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/queryRunner", executeQueryTest)
+	mux.HandleFunc("/api/queryMetrics", listQueryMetrics)
 	mux.HandleFunc("/api/spansGenerator", generateSpans)
 	mux.HandleFunc("/api/jobs", listJobs)
 	mux.HandleFunc("/api/jobs/delete", deleteJob)
 	mux.HandleFunc("/api/status", status)
+	mux.HandleFunc("/api/tags", listTags)
 
 	fs := http.FileServer(http.Dir("/app/web"))
 	mux.Handle("/", fs)
@@ -162,6 +164,37 @@ func executeQueryTest(w http.ResponseWriter, r *http.Request) {
 func setJobID(jobID string, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	od, err := json.Marshal(map[string]string{"jobID": jobID})
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.Write(od)
+}
+
+func listTags(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	_tags := ListTags()
+	od, err := json.Marshal(&_tags)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.Write(od)
+}
+
+func listQueryMetrics(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	filterTags := r.URL.Query()["tags"]
+	_ft := make([]string, len(filterTags))
+	for _, t := range filterTags {
+		_ft = append(_ft, strings.ToLower(t))
+	}
+	d, err := ListCustomData("summary", _ft...)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	od, err := json.Marshal(&d)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return

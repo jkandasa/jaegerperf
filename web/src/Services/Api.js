@@ -1,6 +1,6 @@
-import axios from "axios";
-import { t } from "typy";
-import qs from "qs";
+import axios from "axios"
+import { t } from "typy"
+import qs from "qs"
 
 export const HTTP_CODES = {
   OK: 200,
@@ -13,7 +13,7 @@ export const HTTP_CODES = {
   INTERNAL_SERVER: 500,
   SERVICE_UNAVAILABLE: 503,
   GATEWAY_TIMEOUT: 504
-};
+}
 
 export const HTTP_VERBS = {
   DELETE: "delete",
@@ -21,35 +21,35 @@ export const HTTP_VERBS = {
   PATCH: "patch",
   POST: "post",
   PUT: "put"
-};
+}
 
 const myAxios = axios.create({
   paramsSerializer: params => qs.stringify(params, { arrayFormat: "repeat" })
-});
+})
 
 // Add a request interceptor
 myAxios.interceptors.request.use(
   request => {
     //console.log('Request:', request)
-    return request;
+    return request
   },
   error => {
-    console.log("REQ-Error:", error);
-    return Promise.reject(error);
+    console.log("REQ-Error:", error)
+    return Promise.reject(error)
   }
-);
+)
 
 // Add a response interceptor
 myAxios.interceptors.response.use(
   response => {
     //console.log('Response:', response)
-    return response;
+    return response
   },
   error => {
     // do some action
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
 const urls = {
   jobs: {
@@ -59,23 +59,29 @@ const urls = {
   queryRunner: {
     default: "/queryRunner"
   },
+  queryMetrics: {
+    default: "/queryMetrics"
+  },
   spansGenerator: {
     default: "/spansGenerator"
   },
   status: {
     default: "/status"
+  },
+  tags: {
+    default: "/tags"
   }
-};
+}
 
 const url = key => {
-  return t(urls, key).safeString;
-};
+  return t(urls, key).safeString
+}
 
 const getHeaders = () => {
   return {
     "X-Auth-Type-Browser-UI": "1"
-  };
-};
+  }
+}
 
 const newRequest = (method, url, queryParams, data, headers) =>
   myAxios.request({
@@ -85,28 +91,36 @@ const newRequest = (method, url, queryParams, data, headers) =>
     data: data,
     headers: { ...getHeaders(), ...headers },
     params: queryParams
-  });
+  })
 
 export const triggerQueryRunner = (data, language) => {
   return newRequest(HTTP_VERBS.POST, url("queryRunner.default"), {}, data, {
     "Content-Type": "application/" + language
-  });
-};
+  })
+}
 
 export const triggerGenerateSpans = (data, language) => {
   return newRequest(HTTP_VERBS.POST, url("spansGenerator.default"), {}, data, {
     "Content-Type": "application/" + language
-  });
-};
+  })
+}
 
 export const status = () => {
-  return newRequest(HTTP_VERBS.GET, url("status.default"), {}, {});
-};
+  return newRequest(HTTP_VERBS.GET, url("status.default"), {}, {})
+}
 
 export const jobs = () => {
-  return newRequest(HTTP_VERBS.GET, url("jobs.default"), {}, {});
-};
+  return newRequest(HTTP_VERBS.GET, url("jobs.default"), {}, {})
+}
 
 export const deleteJob = jobId => {
-  return newRequest(HTTP_VERBS.DELETE, url("jobs.delete"), { jobId }, {});
-};
+  return newRequest(HTTP_VERBS.DELETE, url("jobs.delete"), { jobId }, {})
+}
+
+export const tags = () => {
+  return newRequest(HTTP_VERBS.GET, url("tags.default"), {}, {})
+}
+
+export const listQueryMetrics = tags => {
+  return newRequest(HTTP_VERBS.GET, url("queryMetrics.default"), { tags }, {})
+}

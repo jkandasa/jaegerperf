@@ -19,7 +19,7 @@ spec:
         jaeger-infra: jaegerperf-pod
     spec:
       containers:
-      - image: quay.io/jkandasa/jaegerperf:1.0
+      - image: quay.io/jkandasa/jaegerperf:1.1
         imagePullPolicy: Always
         name: jaegerperf
         ports:

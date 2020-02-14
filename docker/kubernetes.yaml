@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaegerperf
+  annotations: "sidecar.jaegertracing.io/inject": "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: jaegerperf
+  template:
+    metadata:
+      labels:
+        name: jaegerperf
+    spec:
+      containers:
+      - name: jaegerperf
+        image: quay.io/jkandasa/jaegerperf:1.1
+        imagePullPolicy: Always
+        ports:
+        - name: http-api
+          containerPort: 8080
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: jaegerperf
+spec:
+  selector:
+    name: jaegerperf
+  ports:
+    - name: jaegerperf
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  

@@ -1,5 +1,5 @@
-import React from "react";
-import PageTitle from "../../Components/PageTitle/PageTitle";
+import React from "react"
+import PageTitle from "../../Components/PageTitle/PageTitle"
 import {
   Table,
   Button,
@@ -9,19 +9,19 @@ import {
   Tooltip,
   Modal,
   message
-} from "antd";
-import uuid from "uuid/v4";
-import * as API from "../../Services/Api";
-import moment from "moment";
-import { t } from "typy";
+} from "antd"
+import uuid from "uuid/v4"
+import * as API from "../../Services/Api"
+import moment from "moment"
+import { t } from "typy"
 
-const { confirm } = Modal;
+const { confirm } = Modal
 
 class Jobs extends React.Component {
   state = {
     data: [],
     loading: true
-  };
+  }
 
   columns = [
     {
@@ -66,10 +66,10 @@ class Jobs extends React.Component {
               />
             </Tooltip>
           </span>
-        );
+        )
       }
     }
-  ];
+  ]
 
   queryRunnerColumns = [
     {
@@ -77,7 +77,7 @@ class Jobs extends React.Component {
       dataIndex: "name",
       defaultSortOrder: "ascend",
       sorter: (a, b) => {
-        return a.name.localeCompare(b.name);
+        return a.name.localeCompare(b.name)
       }
     },
     {
@@ -101,74 +101,74 @@ class Jobs extends React.Component {
       title: "Content Length",
       dataIndex: "contentLength"
     }
-  ];
+  ]
 
   displayError = text => {
-    message.error(text);
-  };
+    message.error(text)
+  }
 
   deleteRecord = r => {
     API.deleteJob(r.id)
       .then(() => {
         // deleted successfully
-        this.fetchData();
+        this.fetchData()
       })
       .catch(e => {
-        this.displayError(e.message ? e.message : JSON.stringify(e));
-      });
-  };
+        this.displayError(e.message ? e.message : JSON.stringify(e))
+      })
+  }
 
   deleteConfirmation = r => {
     const message = `ID\t: ${r.id}\nType\t: ${r.type}\nStatus\t: ${
-      r.isRunning ? "Running" : "Completed"
-    }`;
+      r.data.isRunning ? "Running" : "Completed"
+    }`
     confirm({
       width: 520,
       title: "Do you want to delete this item?",
       content: <pre>{message}</pre>,
       onOk: () => this.deleteRecord(r),
       onCancel() {}
-    });
-  };
+    })
+  }
 
   saveRecord = r => {
     const blob = new Blob([JSON.stringify(r, "", " ")], {
       type: "application/json"
-    });
-    const url = URL.createObjectURL(blob);
+    })
+    const url = URL.createObjectURL(blob)
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = r.id + ".json";
-    const click = new MouseEvent("click");
+    const a = document.createElement("a")
+    a.href = url
+    a.download = r.id + ".json"
+    const click = new MouseEvent("click")
 
     // Push the download operation on the next tick
     requestAnimationFrame(() => {
-      a.dispatchEvent(click);
-    });
-  };
+      a.dispatchEvent(click)
+    })
+  }
 
   fetchData = () => {
-    this.setState({ loading: true });
+    this.setState({ loading: true })
     API.jobs({})
       .then(res => {
-        this.setState({ data: res.data, loading: false });
+        this.setState({ data: res.data, loading: false })
       })
       .catch(e => {
-        this.displayError(e.message ? e.message : JSON.stringify(e));
-        this.setState({ data: [], loading: false });
-      });
-  };
+        this.displayError(e.message ? e.message : JSON.stringify(e))
+        this.setState({ data: [], loading: false })
+      })
+  }
 
   componentDidMount() {
-    this.fetchData();
+    this.fetchData()
   }
 
   expandRowFn = record => {
-    let queryRunnerTable;
+    let queryRunnerTable
     if (record.type === "QueryRunner" && !record.isRunning) {
       if (t(record, "data.data.metrics.summary").isDefined) {
-        const subData = t(record, "data.data.metrics.summary").safeArray;
+        const subData = t(record, "data.data.metrics.summary").safeArray
         queryRunnerTable = (
           <Table
             style={{ marginBottom: "7px" }}
@@ -179,7 +179,7 @@ class Jobs extends React.Component {
             bordered
             size="small"
           />
-        );
+        )
       }
     }
     return (
@@ -187,8 +187,8 @@ class Jobs extends React.Component {
         {queryRunnerTable}
         <pre style={{ margin: 0 }}>{JSON.stringify(record, null, 2)}</pre>
       </React.Fragment>
-    );
-  };
+    )
+  }
 
   render() {
     return (
@@ -217,11 +217,12 @@ class Jobs extends React.Component {
             rowKey={uuid}
             expandedRowRender={this.expandRowFn}
             bordered
+            size="small"
           />
         </Spin>
       </React.Fragment>
-    );
+    )
   }
 }
 
-export default Jobs;
+export default Jobs

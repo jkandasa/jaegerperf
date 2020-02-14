@@ -1,0 +1,12 @@
+.custom-card {
+  border: 1px solid #d8d8d8;
+}
+
+.custom-card .ant-card-head {
+  background-color: #f8f8f8;
+  border-bottom: 1px solid #d8d8d8;
+}
+
+.custom-card .ant-card-head-title{
+  font-weight: 500;
+}

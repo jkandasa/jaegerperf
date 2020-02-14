@@ -2,14 +2,18 @@ package jaegerperf
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
 
-const fileLocation = "/tmp/jaegerperf"
+const flJobs = "/tmp/jaegerperf/jobs"
+const flCustomData = "/tmp/jaegerperf/custom-data"
+const flOthers = "/tmp/jaegerperf/others"
 
 // JobData for json file
 type JobData struct {
@@ -19,43 +23,90 @@ type JobData struct {
 	ModifiedTime time.Time   `json:"modifiedTime"`
 }
 
-func createRootLocation() {
-	if _, err := os.Stat(fileLocation); os.IsNotExist(err) {
-		os.MkdirAll(fileLocation, 0775)
+// CustomData definition
+type CustomData struct {
+	Tags []string    `json:"tags"`
+	Type string      `json:"type"`
+	Data interface{} `json:"data"`
+}
+
+func createRootLocation(rootLocation string) {
+	if _, err := os.Stat(rootLocation); os.IsNotExist(err) {
+		os.MkdirAll(rootLocation, 0775)
 	}
+}
+
+// DumpCustom data
+func dumpData(rootLocation, filename string, data interface{}) error {
+	createRootLocation(rootLocation)
+	file, err := json.MarshalIndent(data, "", " ")
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(fmt.Sprintf("%s/%s.json", rootLocation, filename), file, 0644)
+	return err
 }
 
 // Update stores data into disk
 func (j *JobData) Update() error {
-	createRootLocation()
 	j.ModifiedTime = time.Now()
-	file, err := json.MarshalIndent(j, "", " ")
-	if err != nil {
-		return err
+	return dumpData(flJobs, j.ID, j)
+}
+
+// DumpCustom data
+func DumpCustom(filename string, data interface{}) error {
+	return dumpData(flCustomData, filename, data)
+}
+
+// ListCustomData details
+func ListCustomData(filePrefix string, filterTags ...string) ([]CustomData, error) {
+	createRootLocation(flCustomData)
+	if filePrefix == "" {
+		return nil, errors.New("file prefix not supplied")
 	}
-	err = ioutil.WriteFile(fmt.Sprintf("%s/%s.json", fileLocation, j.ID), file, 0644)
-	return err
+	customData := make([]CustomData, 0)
+	files, err := ioutil.ReadDir(flCustomData)
+	if err != nil {
+		return nil, err
+	}
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), filePrefix) {
+			d := CustomData{}
+			b, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", flCustomData, file.Name()))
+			if err != nil {
+				return nil, err
+			}
+			err = json.Unmarshal(b, &d)
+			if err != nil {
+				return customData, err
+			}
+			if len(filterTags) == 0 {
+				customData = append(customData, d)
+			} else {
+				for _, ft := range filterTags {
+					for _, st := range d.Tags {
+						if ft == st {
+							customData = append(customData, d)
+						}
+					}
+				}
+			}
+		}
+	}
+	return customData, nil
 }
 
 // ListJobs return available job details
 func ListJobs() ([]JobData, error) {
-	createRootLocation()
+	createRootLocation(flJobs)
 	jobs := make([]JobData, 0)
-	files, err := ioutil.ReadDir(fileLocation)
-	/*
-		err := filepath.Walk(
-			fmt.Sprintf("%s/", fileLocation),
-			func(path string, info os.FileInfo, err error) error {
-				files = append(files, path)
-				return nil
-			})
-	*/
+	files, err := ioutil.ReadDir(flJobs)
 	if err != nil {
 		return nil, err
 	}
 	for _, file := range files {
 		d := JobData{}
-		b, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", fileLocation, file.Name()))
+		b, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", flJobs, file.Name()))
 		if err != nil {
 			return nil, err
 		}
@@ -67,7 +118,10 @@ func ListJobs() ([]JobData, error) {
 
 // DeleteJob remove from disk
 func DeleteJob(jobID string) error {
-	return os.Remove(fmt.Sprintf("%s/%s.json", fileLocation, jobID))
+	// remove summary data, do not care about the error
+	os.Remove(fmt.Sprintf("%s/summary_%s.json", flCustomData, jobID))
+	// remove the detailed file
+	return os.Remove(fmt.Sprintf("%s/%s.json", flJobs, jobID))
 }
 
 // JobStatus displays last job status
@@ -129,4 +183,46 @@ func (j *Job) SetCompleted() {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+var _tags = make([]string, 0)
+
+// ListTags returns available tags
+func ListTags() []string {
+	return _tags
+}
+
+// UpdateTags adds new tags
+func UpdateTags(nTags ...string) {
+	d := map[string]bool{}
+	newTags := append(_tags, nTags...)
+	for _, t := range newTags {
+		d[strings.ToLower(t)] = true
+	}
+
+	_newTags := make([]string, 0)
+	for k := range d {
+		_newTags = append(_newTags, k)
+	}
+	_tags = _newTags
+	// Update tags to disk
+	dumpData(flOthers, "tags", _tags)
+}
+
+// InitJobData from disk
+func InitJobData() error {
+	// load tags from disk
+	createRootLocation(flOthers)
+	t := make([]string, 0)
+
+	b, err := ioutil.ReadFile(fmt.Sprintf("%s/%s.json", flOthers, "tags"))
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(b, &t)
+	if err != nil {
+		return err
+	}
+	_tags = t
+	return nil
 }

@@ -8,7 +8,7 @@ DOCKER_REPO="${DOCKER_ORG}/jaegerperf"
 GOLANG_BUILDER_TAG="1.13.5-alpine3.11"
 
 # tag version
-TAG='1.0'
+TAG='1.1'
 
 # build go project
 # go build ../main.go

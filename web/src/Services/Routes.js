@@ -1,7 +1,8 @@
-import JobsPage from "../Pages/Jobs/Jobs";
-import SpansGeneratorPage from "../Pages/SpansGenerator/SpansGenerator";
-import QueryRunnerPage from "../Pages/QueryRunner/QueryRunner";
-import { t } from 'typy'
+import JobsPage from "../Pages/Jobs/Jobs"
+import SpansGeneratorPage from "../Pages/SpansGenerator/SpansGenerator"
+import QueryRunnerPage from "../Pages/QueryRunner/QueryRunner"
+import QueryMetricsPage from "../Pages/QueryMetrics/QueryMetrics"
+import { t } from "typy"
 
 const routes = [
   {
@@ -21,15 +22,21 @@ const routes = [
     title: "Jobs",
     to: "/jobs",
     component: JobsPage
+  },
+  {
+    id: "queryMetrics",
+    title: "Query Metrics",
+    to: "/queryMetrics",
+    component: QueryMetricsPage
   }
-];
+]
 
 const hiddenRoutes = [
   {
     to: "/",
     component: ""
   }
-];
+]
 
 const routeMap = {
   home: "/",
@@ -37,18 +44,17 @@ const routeMap = {
   spansGenerator: "/spansGenerator",
   queryRunner: "/queryRunner",
   jobs: "/jobs"
-};
+}
 
-const redirect = (history, name = 'home', urlParams = {}) => {
+const redirect = (history, name = "home", urlParams = {}) => {
   const to = t(routeMap, name).safeString
   if (to) {
     let finalPath = to
     Object.keys(urlParams).forEach(key => {
-      finalPath = finalPath.replace(':' + key, urlParams[key])
+      finalPath = finalPath.replace(":" + key, urlParams[key])
     })
     history.push(finalPath)
   }
 }
 
-
-export { routes, hiddenRoutes, routeMap, redirect };
+export { routes, hiddenRoutes, routeMap, redirect }

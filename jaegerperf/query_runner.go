@@ -40,6 +40,7 @@ type QueryRunnerInput struct {
 	HostURL       string      `yaml:"hostUrl" json:"hostUrl"`
 	CurrentTimeAs time.Time   `yaml:"currentTimeAs" json:"currentTimeAs"`
 	Tests         []TestInput `yaml:"tests" json:"tests"`
+	Tags          []string    `yaml:"tags" json:"tags"`
 }
 
 // TestInput data
@@ -200,6 +201,7 @@ func ExecuteQueryTest(jobID string, input QueryRunnerInput) (map[string]interfac
 	jResult := JobResult{Configuration: input}
 	qJob.SetStatus(true, jobID, jResult)
 	defer qJob.SetCompleted()
+	UpdateTags(input.Tags...)
 	if input.CurrentTimeAs.IsZero() {
 		input.CurrentTimeAs = time.Now()
 	}
@@ -257,6 +259,15 @@ func ExecuteQueryTest(jobID string, input QueryRunnerInput) (map[string]interfac
 			})
 	}
 	r["summary"] = s
+	// update summary data
+	if input.Tags != nil && len(input.Tags) > 0 {
+		cd := &CustomData{
+			Tags: input.Tags,
+			Type: queryRunner,
+			Data: s,
+		}
+		DumpCustom(fmt.Sprintf("summary_%s", jobID), cd)
+	}
 	jResult.Metrics = r
 	qJob.SetStatus(true, jobID, jResult)
 	return r, nil
