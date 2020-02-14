@@ -362,28 +362,32 @@ class Jobs extends React.Component {
         )
       }
     } else {
+      const _tagsData =
+        this.state.tags.length > 0 ? (
+          <React.Fragment>
+            <Checkbox
+              indeterminate={this.state.indeterminate}
+              onChange={this.onCheckAllChange}
+              checked={this.state.checkAll}
+            >
+              Select all
+            </Checkbox>
+            <Divider type="vertical" />
+            <CheckboxGroup
+              options={this.state.tags}
+              value={this.state.selectedTags}
+              onChange={this.onChange}
+            />
+          </React.Fragment>
+        ) : (
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )
       data.push(
         <React.Fragment key="tags">
           <CustomCard
             size="small"
             title="Select tags to continue"
-            body={
-              <React.Fragment>
-                <Checkbox
-                  indeterminate={this.state.indeterminate}
-                  onChange={this.onCheckAllChange}
-                  checked={this.state.checkAll}
-                >
-                  Select all
-                </Checkbox>
-                <Divider type="vertical" />
-                <CheckboxGroup
-                  options={this.state.tags}
-                  value={this.state.selectedTags}
-                  onChange={this.onChange}
-                />
-              </React.Fragment>
-            }
+            body={_tagsData}
           />
           <Button
             size="default"
