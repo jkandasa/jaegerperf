@@ -6,8 +6,7 @@ import CodeSubmitForm from "../../Components/CodeSubmitForm/CodeSubmitForm"
 
 const defaultCode = `hostUrl: http://jaegerqe-query:16686
 tags:
-  - test-base-line
-  - version 1.x
+  - master branch
 tests:
   - name: 1.last 12 hours limit 100
     type: search
