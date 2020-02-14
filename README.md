@@ -69,6 +69,8 @@ You can execute via WEB UI as well.
 #### Configurations (YAML):
 ```yaml
 hostUrl: http://jaegerqe-query:16686
+tags:
+  - master branch
 tests:
   - name: last 12 hours limit 100
     type: search
@@ -93,6 +95,7 @@ tests:
       end: 0h
 ```
 * `hostUrl` : jaegertracing query service url
+* `tags` : supply any number tags to refer this result on the `Query Metrics` page. Unique tags are recommended for each run
 * `tests` : you can add list of tests to run
   * `name` : Name of the test
   * `type` : Supports jaeger query `search` and `services` query.
@@ -117,15 +120,30 @@ Once triggered `Query Runner` or `Spans Generator` you can see the status of the
 #### WEB UI, http://localhost:8080  >> Jobs
 In the WEB UI, for Query runner, you can see a quick summary table on a completed jobs.
 
+#### JOB DATA
+You can download job details via the API call or from the UI page. It contains detailed information.
+Example: You can see Query Runner data like elapsed time, failed count, etc.,
+
+### Query Metrics (WEB UI)
+Based on the tags supplied on the `Query Runner` job you can see metric data in the form of table and charts.
+
+It give quick understanding. If you want to see failed query detail like status code and error message can download from the `Jobs` page.
+
+
 ## RUN
 ### Docker
 ```
-docker run --rm -d -p 8080:8080 --name=jaegerperf quay.io/jkandasa/jaegerperf:1.0
+docker run --rm -d -p 8080:8080 --name=jaegerperf quay.io/jkandasa/jaegerperf:1.1
 ```
 
 ### OpenShift
 ```
 oc create -f docker/openshift.yaml
+```
+
+### Kubernetes
+```
+kubectl create -f docker/kubernetes.yaml
 ```
 
 ## Build
