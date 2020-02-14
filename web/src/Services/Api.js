@@ -86,8 +86,8 @@ const getHeaders = () => {
 const newRequest = (method, url, queryParams, data, headers) =>
   myAxios.request({
     method: method,
-    url: "/api" + url,
-    //url: "http://localhost:8080/api" + url,
+    //url: "/api" + url,
+    url: "http://localhost:8080/api" + url,
     data: data,
     headers: { ...getHeaders(), ...headers },
     params: queryParams

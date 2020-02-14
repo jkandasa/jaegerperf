@@ -172,7 +172,7 @@ class Jobs extends React.Component {
     const content = []
     if (this.state.errorsCount > 0) {
       content.push(
-        <p>
+        <p key="errorCount">
           Errors found on the query runs! Number of failed queries:{" "}
           {this.state.errorsCount}
         </p>
@@ -180,7 +180,7 @@ class Jobs extends React.Component {
     }
     if (this.state.minContentLength <= 100) {
       content.push(
-        <p>
+        <p key="contentLength">
           Some of the query response content lengths are less than 100 bytes!
         </p>
       )
