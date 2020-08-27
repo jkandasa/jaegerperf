@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaegerperf
+spec:
+  selector:
+    matchLabels:
+      app: jaegerperf
+      jaeger-infra: jaegerperf-pod
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: jaegerperf
+        jaeger-infra: jaegerperf-pod
+    spec:
+      containers:
+      - image: quay.io/jkandasa/jaegerperf:1.3
+        imagePullPolicy: Always
+        name: jaegerperf
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaegerperf
+  labels:
+    app: jaegerperf
+spec:
+  selector:
+    app: jaegerperf
+  ports:
+  - name: jaegerperf
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: jaegerperf
+  labels:
+    app: jaeger
+    jaeger-infra: jaegerperf-route
+spec:
+  to:
+    kind: Service
+    name: jaegerperf

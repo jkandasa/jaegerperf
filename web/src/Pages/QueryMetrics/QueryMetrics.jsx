@@ -1,23 +1,12 @@
 import React from "react"
 import PageTitle from "../../Components/PageTitle/PageTitle"
-import {
-  Table,
-  Button,
-  Spin,
-  message,
-  Checkbox,
-  Tag,
-  Alert,
-  Select,
-  Divider,
-  Empty
-} from "antd"
-import uuid from "uuid/v4"
-import * as API from "../../Services/Api"
+import { Table, Button, Spin, message, Checkbox, Tag, Alert, Select, Divider, Empty } from "antd"
+import { api as API } from "../../Services/Api"
 import LineChart from "../../Components/LineChart/LineChart"
 import CustomCard from "../../Components/CustomCard/CustomCard"
 
 import "./QueryMetrics.css"
+import { CheckOutlined } from "@ant-design/icons"
 
 const { Option } = Select
 const CheckboxGroup = Checkbox.Group
@@ -27,7 +16,7 @@ const metricOptions = {
   elapsed: "Elapsed Time(ms)",
   errorsCount: "Errors Count",
   errorPercentage: "Error Percentage",
-  contentLength: "Content Length"
+  contentLength: "Content Length",
 }
 class Jobs extends React.Component {
   state = {
@@ -40,20 +29,21 @@ class Jobs extends React.Component {
     errorsCount: 0,
     minContentLength: -1,
     chartType: "bar",
-    metricType: "elapsed"
+    metricType: "elapsed",
   }
 
-  displayError = text => {
+  displayError = (text) => {
     message.error(text)
   }
 
   fetchTags = () => {
     this.setState({ loading: true })
-    API.tags({})
-      .then(res => {
+    API.query
+      .listTags()
+      .then((res) => {
         this.setState({ tags: res.data.sort(), loading: false })
       })
-      .catch(e => {
+      .catch((e) => {
         console.log(e)
         this.displayError(e.message ? e.message : JSON.stringify(e))
         this.setState({ tags: [], loading: false })
@@ -62,12 +52,13 @@ class Jobs extends React.Component {
 
   fetchMetrics = () => {
     this.setState({ loading: true, loadMetrics: true })
-    API.listQueryMetrics(this.state.selectedTags)
-      .then(res => {
+    API.query
+      .listMetrics(this.state.selectedTags)
+      .then((res) => {
         let errorsCount = 0
         let minContentLength = 1000000
 
-        const updateWarnData = d => {
+        const updateWarnData = (d) => {
           errorsCount += d["errorsCount"]
           if (d["contentLength"] < minContentLength) {
             minContentLength = d["contentLength"]
@@ -75,15 +66,15 @@ class Jobs extends React.Component {
         }
 
         // convert array to map object
-        // source: [{tags: ["tag-1"], data:[{name: "query-name", elapsed: 123}]},{...}]
+        // source: [{jobId: "abc", status:{...}, tags: ["tag-1"], summary:[{name: "query-name", elapsed: 123}]},{...}]
         // target: {"query-name":{"tag-1":{elapsed: 123}, "tag-2":{elapsed: 123}}}
         const _objMap = {}
-        this.state.selectedTags.forEach(t => {
+        this.state.selectedTags.forEach((t) => {
           for (let index = 0; index < res.data.length; index++) {
             const q = res.data[index]
             if (Array.from(q.tags).includes(t)) {
               const tag = this.formatTag(t) // tag.1 => tag_1
-              q.data.forEach(d => {
+              q.summary.forEach((d) => {
                 if (_objMap[d.name] === undefined) {
                   _objMap[d.name] = {}
                 }
@@ -102,10 +93,10 @@ class Jobs extends React.Component {
           metricsData: _objMap,
           loading: false,
           errorsCount: errorsCount,
-          minContentLength: minContentLength
+          minContentLength: minContentLength,
         })
       })
-      .catch(e => {
+      .catch((e) => {
         console.log(e)
         this.displayError(e.message ? e.message : JSON.stringify(e))
         this.setState({ tags: [], loading: false })
@@ -116,20 +107,19 @@ class Jobs extends React.Component {
     this.fetchTags()
   }
 
-  onChange = checkedList => {
+  onChange = (checkedList) => {
     this.setState({
       selectedTags: checkedList,
-      indeterminate:
-        !!checkedList.length && checkedList.length < this.state.tags.length,
-      checkAll: checkedList.length === this.state.tags.length
+      indeterminate: !!checkedList.length && checkedList.length < this.state.tags.length,
+      checkAll: checkedList.length === this.state.tags.length,
     })
   }
 
-  onCheckAllChange = e => {
+  onCheckAllChange = (e) => {
     this.setState({
       selectedTags: e.target.checked ? this.state.tags : [],
       indeterminate: false,
-      checkAll: e.target.checked
+      checkAll: e.target.checked,
     })
   }
 
@@ -145,26 +135,25 @@ class Jobs extends React.Component {
         defaultSortOrder: "ascend",
         sorter: (a, b) => {
           return a.name.localeCompare(b.name)
-        }
-      }
+        },
+      },
     ]
-    this.state.selectedTags.forEach(t => {
+    this.state.selectedTags.forEach((t) => {
       const tag = this.formatTag(t)
       columns.push({
         title: t,
-        dataIndex: tag + "." + this.state.metricType,
-        render: v =>
-          this.state.metricType === "elapsed" ? (v ? parseInt(v / 1000) : v) : v
+        dataIndex: [tag, this.state.metricType],
+        render: (v) => (this.state.metricType === "elapsed" ? (v ? parseInt(v / 1000) : v) : v),
       })
     })
     return columns
   }
 
-  changeChartType = type => {
+  changeChartType = (type) => {
     this.setState({ chartType: type })
   }
 
-  changeMetricType = type => {
+  changeMetricType = (type) => {
     this.setState({ metricType: type })
   }
 
@@ -173,16 +162,13 @@ class Jobs extends React.Component {
     if (this.state.errorsCount > 0) {
       content.push(
         <p key="errorCount">
-          Errors found on the query runs! Number of failed queries:{" "}
-          {this.state.errorsCount}
+          Errors found on the query runs! Number of failed queries: {this.state.errorsCount}
         </p>
       )
     }
     if (this.state.minContentLength <= 100) {
       content.push(
-        <p key="contentLength">
-          Some of the query response content lengths are less than 100 bytes!
-        </p>
+        <p key="contentLength">Some of the query response content lengths are less than 100 bytes!</p>
       )
     }
     if (content.length > 0) {
@@ -211,7 +197,7 @@ class Jobs extends React.Component {
               <React.Fragment>
                 <div>
                   Tags:{" "}
-                  {this.state.selectedTags.map(t => {
+                  {this.state.selectedTags.map((t) => {
                     return (
                       <Tag key={t} color="blue">
                         {t}
@@ -231,7 +217,7 @@ class Jobs extends React.Component {
                   defaultValue={this.state.metricType}
                   onChange={this.changeMetricType}
                 >
-                  {Object.keys(metricOptions).map(k => {
+                  {Object.keys(metricOptions).map((k) => {
                     return (
                       <Option key={k} value={k}>
                         {metricOptions[k]}
@@ -253,9 +239,9 @@ class Jobs extends React.Component {
         // source: {"query-name":{"tag-1":{elapsed: 123}, "tag-2":{elapsed: 123}}}
         // target: {"tag-1": [{x: "query-name"}, {...}]}
         const _tDS = {}
-        category.forEach(qn => {
+        category.forEach((qn) => {
           const ts = this.state.metricsData[qn]
-          Object.keys(ts).forEach(t => {
+          Object.keys(ts).forEach((t) => {
             const _ts = ts[t]
             if (_tDS[t] === undefined) {
               _tDS[t] = []
@@ -265,7 +251,7 @@ class Jobs extends React.Component {
               y:
                 this.state.metricType === "elapsed"
                   ? parseInt(_ts["elapsed"] / 1000)
-                  : _ts[this.state.metricType]
+                  : _ts[this.state.metricType],
             })
           })
         })
@@ -274,20 +260,20 @@ class Jobs extends React.Component {
         // source: {"tag-1": [{x: "query-name"}, {...}]}
         // target: [{label: "tag-1", data:[{x: "query-name", y: 123}, {...}]]
         const _ds = []
-        Object.keys(_tDS).forEach(t => {
+        Object.keys(_tDS).forEach((t) => {
           _ds.push({
             label: t,
             data: _tDS[t],
             type: this.state.chartType,
             fill: false,
             // yAxisID: 'left-y-axis',
-            borderWidth: 2
+            borderWidth: 2,
           })
         })
 
         const cData = {
           labels: category,
-          datasets: _ds
+          datasets: _ds,
         }
 
         //console.log(JSON.stringify(cData, null, 2))
@@ -299,10 +285,7 @@ class Jobs extends React.Component {
             title={"Chart for '" + metricOptions[this.state.metricType] + "'"}
             body={
               cData.datasets.length > 0 ? (
-                <LineChart
-                  data={cData}
-                  yAxesLabel={metricOptions[this.state.metricType]}
-                />
+                <LineChart data={cData} yAxesLabel={metricOptions[this.state.metricType]} />
               ) : (
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
               )
@@ -315,7 +298,7 @@ class Jobs extends React.Component {
                   defaultValue={this.state.chartType}
                   onChange={this.changeChartType}
                 >
-                  {chartOptions.map(v => {
+                  {chartOptions.map((v) => {
                     return (
                       <Option key={v} value={v}>
                         {v.toUpperCase()}
@@ -332,15 +315,15 @@ class Jobs extends React.Component {
         // source: {"query-name":{"tag-1":{elapsed: 123}, "tag-2":{elapsed: 123}}}
         // target: [{name: "query-name", "tag-1": {"elapsed": 123}, "tag-2": {"elapsed": 123}}, {...}]
         const _tData = []
-        Object.keys(this.state.metricsData).forEach(qk => {
+        Object.keys(this.state.metricsData).forEach((qk, index) => {
           _tData.push({
+            id: index,
             name: qk,
-            ...this.state.metricsData[qk]
+            ...this.state.metricsData[qk],
           })
         })
 
         //console.log(JSON.stringify(_tData, null, 2))
-
         data.push(
           <CustomCard
             key="table"
@@ -353,7 +336,7 @@ class Jobs extends React.Component {
                 pagination={{ defaultPageSize: 15, hideOnSinglePage: true }}
                 columns={this.getTableColumn()}
                 dataSource={_tData}
-                rowKey={uuid}
+                rowKey="id"
                 bordered
                 className="qm-table"
               />
@@ -384,22 +367,15 @@ class Jobs extends React.Component {
         )
       data.push(
         <React.Fragment key="tags">
-          <CustomCard
-            size="small"
-            title="Select tags to continue"
-            body={_tagsData}
-          />
+          <CustomCard size="small" title="Select tags to continue" body={_tagsData} />
           <Button
             size="default"
             shape="round"
-            icon="check"
             type="primary"
             onClick={this.fetchMetrics}
-            disabled={
-              this.state.loading || this.state.selectedTags.length === 0
-            }
+            disabled={this.state.loading || this.state.selectedTags.length === 0}
           >
-            Continue
+            <CheckOutlined /> Continue
           </Button>
         </React.Fragment>
       )
@@ -407,12 +383,7 @@ class Jobs extends React.Component {
     return (
       <React.Fragment>
         <PageTitle title={"Query Metrics"} />
-        <Spin
-          size="large"
-          tip="Loading..."
-          spinning={this.state.loading}
-          delay={300}
-        >
+        <Spin size="large" tip="Loading..." spinning={this.state.loading} delay={300}>
           {data}
         </Spin>
       </React.Fragment>

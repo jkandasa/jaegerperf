@@ -1,65 +1,56 @@
 import React from "react"
 import PageTitle from "../../Components/PageTitle/PageTitle"
-import {
-  Table,
-  Button,
-  Spin,
-  Icon,
-  Divider,
-  Tooltip,
-  Modal,
-  message
-} from "antd"
-import uuid from "uuid/v4"
-import * as API from "../../Services/Api"
+import { Table, Button, Spin, Divider, Tooltip, Modal } from "antd"
+import { api as API } from "../../Services/Api"
 import moment from "moment"
 import { t } from "typy"
+import { DeleteOutlined, DownloadOutlined, SyncOutlined } from "@ant-design/icons"
+import { errorMsg } from "../../Components/Message/Message"
 
 const { confirm } = Modal
 
 class Jobs extends React.Component {
   state = {
     data: [],
-    loading: true
+    loading: true,
   }
 
   columns = [
     {
       title: "ID",
-      dataIndex: "id"
+      dataIndex: "id",
     },
     {
       title: "Type",
-      dataIndex: "type"
+      dataIndex: "type",
     },
     {
-      title: "Status",
-      dataIndex: "data.isRunning",
-      render: v => (v ? "Running" : "Completed")
+      title: "Is Running",
+      dataIndex: "isRunning",
+      render: (v) => (v ? "Running" : "Completed"),
     },
     {
       title: "Modified Time",
       dataIndex: "modifiedTime",
-      render: v => moment(v).format("DD-MMM-YYYY, HH:mm:ss"),
+      render: (v) => moment(v).format("DD-MMM-YYYY, HH:mm:ss"),
       defaultSortOrder: "descend",
-      sorter: (a, b) => moment(a.modifiedTime) - moment(b.modifiedTime)
+      sorter: (a, b) => moment(a.modifiedTime) - moment(b.modifiedTime),
     },
     {
       title: "Actions",
       key: "actions",
-      render: record => {
+      render: (record) => {
         return (
           <span>
             <Tooltip placement="left" title="Delete">
-              <Icon
-                type="delete"
+              <DeleteOutlined
                 style={{ fontSize: "16px", color: "#08c" }}
                 onClick={() => this.deleteConfirmation(record)}
               />
             </Tooltip>
             <Divider type="vertical" />
             <Tooltip placement="left" title="Download">
-              <Icon
+              <DownloadOutlined
                 type="download"
                 style={{ fontSize: "16px", color: "#08c" }}
                 onClick={() => this.saveRecord(record)}
@@ -67,8 +58,8 @@ class Jobs extends React.Component {
             </Tooltip>
           </span>
         )
-      }
-    }
+      },
+    },
   ]
 
   queryRunnerColumns = [
@@ -78,62 +69,57 @@ class Jobs extends React.Component {
       defaultSortOrder: "ascend",
       sorter: (a, b) => {
         return a.name.localeCompare(b.name)
-      }
+      },
     },
     {
       title: "Elapsed (ms)",
       dataIndex: "elapsed",
-      render: v => parseInt(v / 1000)
+      render: (v) => parseInt(v / 1000),
     },
     {
       title: "Samples",
-      dataIndex: "samples"
+      dataIndex: "samples",
     },
     {
       title: "Errors Count",
-      dataIndex: "errorsCount"
+      dataIndex: "errorsCount",
     },
     {
       title: "Error Percentage",
-      dataIndex: "errorPercentage"
+      dataIndex: "errorPercentage",
     },
     {
       title: "Content Length",
-      dataIndex: "contentLength"
-    }
+      dataIndex: "contentLength",
+    },
   ]
 
-  displayError = text => {
-    message.error(text)
-  }
-
-  deleteRecord = r => {
-    API.deleteJob(r.id)
+  deleteRecord = (r) => {
+    API.jobs
+      .delete(r.id)
       .then(() => {
         // deleted successfully
         this.fetchData()
       })
-      .catch(e => {
-        this.displayError(e.message ? e.message : JSON.stringify(e))
+      .catch((e) => {
+        errorMsg(e.message ? e.message : JSON.stringify(e))
       })
   }
 
-  deleteConfirmation = r => {
-    const message = `ID\t: ${r.id}\nType\t: ${r.type}\nStatus\t: ${
-      r.data.isRunning ? "Running" : "Completed"
-    }`
+  deleteConfirmation = (r) => {
+    const message = `ID\t: ${r.id}\nType\t: ${r.type}\nStatus\t: ${r.isRunning ? "Running" : "Completed"}`
     confirm({
       width: 520,
       title: "Do you want to delete this item?",
       content: <pre>{message}</pre>,
       onOk: () => this.deleteRecord(r),
-      onCancel() {}
+      onCancel() {},
     })
   }
 
-  saveRecord = r => {
+  saveRecord = (r) => {
     const blob = new Blob([JSON.stringify(r, "", " ")], {
-      type: "application/json"
+      type: "application/json",
     })
     const url = URL.createObjectURL(blob)
 
@@ -150,12 +136,13 @@ class Jobs extends React.Component {
 
   fetchData = () => {
     this.setState({ loading: true })
-    API.jobs({})
-      .then(res => {
+    API.jobs
+      .list()
+      .then((res) => {
         this.setState({ data: res.data, loading: false })
       })
-      .catch(e => {
-        this.displayError(e.message ? e.message : JSON.stringify(e))
+      .catch((e) => {
+        errorMsg(e.message ? e.message : JSON.stringify(e))
         this.setState({ data: [], loading: false })
       })
   }
@@ -164,17 +151,17 @@ class Jobs extends React.Component {
     this.fetchData()
   }
 
-  expandRowFn = record => {
+  expandRowFn = (record) => {
     let queryRunnerTable
-    if (record.type === "QueryRunner" && !record.isRunning) {
-      if (t(record, "data.data.metrics.summary").isDefined) {
-        const subData = t(record, "data.data.metrics.summary").safeArray
+    if (record.type === "query_runner" && !record.isRunning) {
+      if (t(record, "data.report.summary").isDefined) {
+        const subData = t(record, "data.report.summary").safeArray
         queryRunnerTable = (
           <Table
             style={{ marginBottom: "7px" }}
             columns={this.queryRunnerColumns}
             dataSource={subData}
-            rowKey={uuid}
+            rowKey="name"
             pagination={false}
             bordered
             size="small"
@@ -200,21 +187,15 @@ class Jobs extends React.Component {
           type="primary"
           style={{ marginBottom: "7px" }}
           size="default"
-          icon="sync"
           shape="round"
         >
-          Refresh
+          <SyncOutlined /> Refresh
         </Button>
-        <Spin
-          size="large"
-          tip="Loading..."
-          spinning={this.state.loading}
-          delay={300}
-        >
+        <Spin size="large" tip="Loading..." spinning={this.state.loading} delay={300}>
           <Table
             columns={this.columns}
             dataSource={this.state.data}
-            rowKey={uuid}
+            rowKey="id"
             expandedRowRender={this.expandRowFn}
             bordered
             size="small"

@@ -1,10 +1,12 @@
-hostUrl: http://jaegerqe-query:16686
-tests:
+host_url: http://jaegerqe-query:16686
+tags:
+  - master
+query:
   - name: 1.last 12 hours limit 100
     type: search
-    iteration: 10
-    statusCode: 200
-    queryParams:
+    repeat_count: 10
+    status_code: 200
+    query_params:
       service: jaegerperf_generator
       limit: 100
       lookback: custom
@@ -13,9 +15,9 @@ tests:
 
   - name: 1.last 12 hours limit 1000
     type: search
-    iteration: 10
-    statusCode: 200
-    queryParams:
+    repeat_count: 10
+    status_code: 200
+    query_params:
       service: jaegerperf_generator
       limit: 1000
       lookback: custom
@@ -24,9 +26,9 @@ tests:
 
   - name: 1.last 12 hours limit 2000
     type: search
-    iteration: 10
-    statusCode: 200
-    queryParams:
+    repeat_count: 10
+    status_code: 200
+    query_params:
       service: jaegerperf_generator
       limit: 2000
       lookback: custom
@@ -35,9 +37,9 @@ tests:
 
   - name: 2.last 24 hours limit 100
     type: search
-    iteration: 10
-    statusCode: 200
-    queryParams:
+    repeat_count: 10
+    status_code: 200
+    query_params:
       service: jaegerperf_generator
       limit: 100
       lookback: custom
@@ -46,9 +48,9 @@ tests:
 
   - name: 2.last 24 hours limit 1000
     type: search
-    iteration: 10
-    statusCode: 200
-    queryParams:
+    repeat_count: 10
+    status_code: 200
+    query_params:
       service: jaegerperf_generator
       limit: 1000
       lookback: custom
@@ -57,9 +59,9 @@ tests:
 
   - name: 2.last 24 hours limit 2000
     type: search
-    iteration: 10
-    statusCode: 200
-    queryParams:
+    repeat_count: 10
+    status_code: 200
+    query_params:
       service: jaegerperf_generator
       limit: 2000
       lookback: custom
@@ -68,9 +70,9 @@ tests:
 
   - name: 3.last 2 days limit 100
     type: search
-    iteration: 10
-    statusCode: 200
-    queryParams:
+    repeat_count: 10
+    status_code: 200
+    query_params:
       service: jaegerperf_generator
       limit: 100
       lookback: custom
@@ -79,9 +81,9 @@ tests:
 
   - name: 3.last 2 days limit 1000
     type: search
-    iteration: 10
-    statusCode: 200
-    queryParams:
+    repeat_count: 10
+    status_code: 200
+    query_params:
       service: jaegerperf_generator
       limit: 1000
       lookback: custom
@@ -90,9 +92,9 @@ tests:
 
   - name: 3.last 2 days limit 2000
     type: search
-    iteration: 10
-    statusCode: 200
-    queryParams:
+    repeat_count: 10
+    status_code: 200
+    query_params:
       service: jaegerperf_generator
       limit: 2000
       lookback: custom
@@ -101,9 +103,9 @@ tests:
 
   - name: 4.last 7 days limit 100
     type: search
-    iteration: 10
-    statusCode: 200
-    queryParams:
+    repeat_count: 10
+    status_code: 200
+    query_params:
       service: jaegerperf_generator
       limit: 100
       lookback: custom
@@ -112,9 +114,9 @@ tests:
 
   - name: 4.last 7 days limit 1000
     type: search
-    iteration: 10
-    statusCode: 200
-    queryParams:
+    repeat_count: 10
+    status_code: 200
+    query_params:
       service: jaegerperf_generator
       limit: 1000
       lookback: custom
@@ -123,9 +125,9 @@ tests:
 
   - name: 4.last 7 days limit 2000
     type: search
-    iteration: 10
-    statusCode: 200
-    queryParams:
+    repeat_count: 10
+    status_code: 200
+    query_params:
       service: jaegerperf_generator
       limit: 2000
       lookback: custom

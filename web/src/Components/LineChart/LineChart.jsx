@@ -8,12 +8,12 @@ const lineChart = ({ title = "", data = [], yAxesLabel = "" }) => {
     title: {
       display: false,
       fontSize: 16,
-      text: title
+      text: title,
     },
     plugins: {
       colorschemes: {
-        scheme: "tableau.Classic10"
-      }
+        scheme: "tableau.Classic10",
+      },
     },
     maintainAspectRatio: false,
     responsive: true,
@@ -26,45 +26,45 @@ const lineChart = ({ title = "", data = [], yAxesLabel = "" }) => {
             source: "data",
             autoSkip: true,
             maxRotation: 45,
-            minRotation: 0
+            minRotation: 0,
           },
           scaleLabel: {
             display: false,
-            labelString: "x-label"
-          }
-        }
+            labelString: "x-label",
+          },
+        },
       ],
       yAxes: [
         {
           ticks: {
-            beginAtZero: true
+            beginAtZero: true,
           },
           scaleLabel: {
             display: true,
-            labelString: yAxesLabel
-          }
-        }
-      ]
+            labelString: yAxesLabel,
+          },
+        },
+      ],
     },
     tooltips: {
       mode: "index",
-      intersect: false
+      intersect: false,
     },
     hover: {
       mode: "index",
       intersect: false,
-      axis: "xy"
+      axis: "xy",
     },
     legend: {
-      position: "top"
+      position: "top",
     },
     elements: {
       point: {
         radius: 0,
         hitRadius: 5,
-        hoverRadius: 5
-      }
-    }
+        hoverRadius: 5,
+      },
+    },
   }
 
   return (

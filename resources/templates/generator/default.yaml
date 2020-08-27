@@ -1,0 +1,24 @@
+endpoint:
+  # type, options => agent, collector
+  type: collector
+  url: http://jaegerqe-collector:14268/api/traces
+
+# mode, options => realtime, history
+mode: realtime
+start_time:
+
+realtime:
+  duration: 5m
+
+history:
+  days: 10
+  spans_per_day: 5000
+
+spans_config:
+  service_name: jaegerperf_generator
+  # spans_per_second => maximum spans limit/sec
+  spans_per_second: 500
+  child_depth: 4
+  tags:
+    spans_generator: "jaegerperf"
+    days: 10

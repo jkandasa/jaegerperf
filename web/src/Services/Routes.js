@@ -8,49 +8,49 @@ const routes = [
   {
     id: "sgPage",
     title: "Spans Generator",
-    to: "/spansGenerator",
-    component: SpansGeneratorPage
+    to: "/spans-generator",
+    component: SpansGeneratorPage,
   },
   {
     id: "qrPage",
     title: "Query Runner",
-    to: "/queryRunner",
-    component: QueryRunnerPage
+    to: "/query-runner",
+    component: QueryRunnerPage,
   },
   {
     id: "jPage",
     title: "Jobs",
     to: "/jobs",
-    component: JobsPage
+    component: JobsPage,
   },
   {
     id: "queryMetrics",
     title: "Query Metrics",
-    to: "/queryMetrics",
-    component: QueryMetricsPage
-  }
+    to: "/query-metrics",
+    component: QueryMetricsPage,
+  },
 ]
 
 const hiddenRoutes = [
   {
     to: "/",
-    component: ""
-  }
+    component: "",
+  },
 ]
 
 const routeMap = {
   home: "/",
   dashboard: "/",
-  spansGenerator: "/spansGenerator",
-  queryRunner: "/queryRunner",
-  jobs: "/jobs"
+  spansGenerator: "/spans-generator",
+  queryRunner: "/query-runner",
+  jobs: "/jobs",
 }
 
 const redirect = (history, name = "home", urlParams = {}) => {
   const to = t(routeMap, name).safeString
   if (to) {
     let finalPath = to
-    Object.keys(urlParams).forEach(key => {
+    Object.keys(urlParams).forEach((key) => {
       finalPath = finalPath.replace(":" + key, urlParams[key])
     })
     history.push(finalPath)

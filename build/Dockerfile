@@ -1,4 +1,4 @@
-FROM alpine:3.11
+FROM alpine:3.12
 
 LABEL maintainer="Jeeva Kandasamy <jkandasa@redhat.com>"
 
@@ -10,7 +10,10 @@ EXPOSE 8080
 COPY ./web $APP_HOME/web
 
 # copy application bin file
-COPY ./appbin $APP_HOME/jaegerperf
+COPY ./jaegerperf $APP_HOME/jaegerperf
+
+# copy default files
+COPY ./resources $APP_HOME/resources
 
 WORKDIR $APP_HOME
 
