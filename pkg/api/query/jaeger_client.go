@@ -14,15 +14,15 @@ import (
 	"time"
 )
 
-// client to run jaeger query
-type client struct {
+// jaegerClient to run jaeger query
+type jaegerClient struct {
 	BaseURL    *url.URL
 	httpClient *http.Client
 	Metrics    map[string][]*qml.MetricRaw
 }
 
 // newClient for jaeger query service
-func newClient(rawURL string) (*client, error) {
+func newClient(rawURL string) (*jaegerClient, error) {
 	baseURL, err := url.Parse(rawURL)
 	if err != nil {
 		return nil, err
@@ -35,14 +35,14 @@ func newClient(rawURL string) (*client, error) {
 	} else {
 		tr = &http.Transport{}
 	}
-	return &client{
+	return &jaegerClient{
 		BaseURL:    baseURL,
 		httpClient: &http.Client{Transport: tr},
 		Metrics:    map[string][]*qml.MetricRaw{},
 	}, nil
 }
 
-func (c *client) timeTrack(name string, metric *qml.MetricRaw) {
+func (c *jaegerClient) timeTrack(name string, metric *qml.MetricRaw) {
 	v, ok := c.Metrics[name]
 	if !ok {
 		c.Metrics[name] = make([]*qml.MetricRaw, 0)
@@ -50,7 +50,7 @@ func (c *client) timeTrack(name string, metric *qml.MetricRaw) {
 	c.Metrics[name] = append(v, metric)
 }
 
-func (c *client) getMetric(name string, index int) *qml.MetricRaw {
+func (c *jaegerClient) getMetric(name string, index int) *qml.MetricRaw {
 	v, ok := c.Metrics[name]
 	if ok {
 		return v[index]
@@ -59,7 +59,7 @@ func (c *client) getMetric(name string, index int) *qml.MetricRaw {
 	return nil
 }
 
-func (c *client) newRequest(test, method, path string, queryParams map[string]interface{}, body interface{}, response interface{}) error {
+func (c *jaegerClient) newRequest(test, method, path string, queryParams map[string]interface{}, body interface{}, response interface{}) error {
 	rel := &url.URL{Path: fmt.Sprintf("/api%s", path)}
 	u := c.BaseURL.ResolveReference(rel)
 	var buf io.ReadWriter
@@ -117,14 +117,14 @@ func (c *client) newRequest(test, method, path string, queryParams map[string]in
 }
 
 // Services lists available services
-func (c *client) Services(test string) (map[string]interface{}, error) {
+func (c *jaegerClient) Services(test string) (map[string]interface{}, error) {
 	resp := make(map[string]interface{})
 	err := c.newRequest(test, "GET", "/services", nil, nil, &resp)
 	return resp, err
 }
 
 // Search traces with given filter
-func (c *client) Search(test string, queryParams map[string]interface{}) (map[string]interface{}, error) {
+func (c *jaegerClient) Search(test string, queryParams map[string]interface{}) (map[string]interface{}, error) {
 	resp := make(map[string]interface{})
 	err := c.newRequest(test, "GET", "/traces", queryParams, nil, &resp)
 	return resp, err

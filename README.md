@@ -133,26 +133,27 @@ It give quick understanding. If you want to see failed query detail like status 
 ## RUN
 ### Docker
 ```
-docker run --rm -d -p 8080:8080 --name=jaegerperf quay.io/jkandasa/jaegerperf:1.1
+docker run --rm -d -p 8080:8080 --name=jaegerperf quay.io/jkandasa/jaegerperf:1.3
 ```
 
 ### OpenShift
 ```
-oc create -f docker/openshift.yaml
+oc create -f deploy/openshift.yaml
 ```
 
 ### Kubernetes
 ```
-kubectl create -f docker/kubernetes.yaml
+kubectl create -f deploy/kubernetes.yaml
 ```
 
 ## Build
 Build WEB
 ```
 cd web
-npm run build
+yarn build
 ```
 Build and push docker image
 ```
-docker/build_docker.sh
+cd build
+./build_docker.sh
 ```
