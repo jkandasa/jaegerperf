@@ -139,6 +139,9 @@ docker run --rm -d -p 8080:8080 --name=jaegerperf quay.io/jkandasa/jaegerperf:1.
 ### OpenShift
 ```
 oc create -f deploy/openshift.yaml
+
+# with agent sidecar
+oc create -f deploy/openshift_with_agent_sidecar.yaml
 ```
 
 ### Kubernetes
